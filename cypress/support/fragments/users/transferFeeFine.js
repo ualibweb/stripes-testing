@@ -1,4 +1,4 @@
-import { Button, Modal, TextField, Select, Pane } from '../../../../interactors';
+import { Button, Modal, TextField, Select, Pane, MultiSelect } from '../../../../interactors';
 
 const rootModal = Modal({ id: 'transfer-modal' });
 const amountTextfield = rootModal.find(TextField({ id: 'amount' }));
@@ -20,6 +20,25 @@ export default {
 
   selectTransferCriteriaSchedulePeriod(period = 'Days') {
     cy.do(Select({ name: 'schedulePeriod' }).choose(period));
+  },
+
+  setTransferCriteriaScheduling(frequency = 'Never (run manually)', interval, time, weekDays) {
+    cy.do(Select({ name: 'scheduling.frequency' }).choose(frequency));
+
+    if (frequency !== 'Never (run manually)') {
+      cy.do([
+        Select({ name: 'scheduling.interval' }).choose(interval),
+        TextField({ name: 'scheduling.time' }).fillIn(time)
+      ]);
+    }
+
+    if (frequency === 'Weekly') {
+      if (weekDays === undefined) {
+        cy.do(MultiSelect({ name: 'scheduling.weekDay' }).choose('Monday'));
+      } else {
+        weekDays.map((day) => cy.do(MultiSelect({ name: 'scheduling.weekDay' }).choose(day)));
+      }
+    }
   },
 
   typeScheduleTime(time) {
