@@ -1,12 +1,4 @@
-import { el } from 'date-fns/locale';
-import {
-  Button,
-  Modal,
-  TextField,
-  Select,
-  Pane,
-  MultiSelect,
-} from '../../../../interactors';
+import { Button, Modal, MultiSelect, Pane, Select, TextField } from '../../../../interactors';
 
 const rootModal = Modal({ id: 'transfer-modal' });
 const amountTextfield = rootModal.find(TextField({ id: 'amount' }));
@@ -77,6 +69,20 @@ export default {
       );
     }
     // Currently don't have any test cases for criteria
+  },
+
+  setCriteriaItemServicePoint(servicePointName) {
+    cy.do([
+      Select({ name: 'criteria.type' }).choose('Item service point'),
+      Select({ name: 'criteria.servicePointId' }).choose(servicePointName)
+    ]);
+  },
+
+  setCriteriaFeeFineOwner(feeFineOwner) {
+    cy.do([
+      Select({ name: 'criteria.type' }).choose('Fee/fine owner'),
+      Select({ name: 'criteria.feeFineOwnerId' }).choose(feeFineOwner)
+    ]);
   },
 
   setTransferAccount(feeFineOwner, transferAccount) {
@@ -159,6 +165,20 @@ export default {
     if (!criteria) {
       cy.expect(Select({ name: 'criteria.type', value: 'Pass' }).exists());
     }
+  },
+
+  verifyCriteriaItemServicePoint(servicePointId) {
+    cy.expect([
+      Select({ name: 'criteria.type', value: 'ServicePoint' }).exists(),
+      Select({ name: 'criteria.servicePointId', value: servicePointId }).exists()
+    ]);
+  },
+
+  verifyCriteriaFeeFineOwner(feeFineOwnerId) {
+    cy.expect([
+      Select({ name: 'criteria.type', value: 'FeeFineOwner' }).exists(),
+      Select({ name: 'criteria.feeFineOwnerId', value: feeFineOwnerId }).exists()
+    ]);
   },
 
   verifyTransferAccount(feeFineOwner, transferAccount) {
