@@ -6,6 +6,7 @@ import {
   Select,
   Pane,
   MultiSelect,
+  Checkbox
 } from '../../../../interactors';
 
 const rootModal = Modal({ id: 'transfer-modal' });
@@ -84,6 +85,17 @@ export default {
       Select({ name: 'transferInfo.else.owner' }).choose(feeFineOwner),
       Select({ name: 'transferInfo.else.account' }).choose(transferAccount),
     ]);
+  },
+
+  setLengthControl(item, length, character, truncate, direction) {
+    cy.get(`select[name="${item}.type"]`).parents('div.header---ynqPZ').find('button[icon="gear"]').click();
+    cy.expect(TextField({ name: `${item}.lengthControl.length` }).exists());
+    cy.do(TextField({ name: `${item}.lengthControl.length` }).fillIn(length));
+    cy.do(TextField({ name: `${item}.lengthControl.character` }).fillIn(character));
+    if (truncate) {
+      cy.do(Checkbox({ name: `${item}.lengthControl.truncate` }).click());
+    }
+    cy.do(Select({ name: `${item}.lengthControl.direction` }).choose(direction));
   },
 
   openAllPanes() {
@@ -185,6 +197,13 @@ export default {
     }
   },
 
+  verifyLengthControl(item, length, character, truncate, direction) {
+    cy.expect(TextField({ name: `${item}.lengthControl.length`, value: length }).exists());
+    cy.expect(TextField({ name: `${item}.lengthControl.character`, value: character }).exists());
+    cy.expect(Checkbox({ name: `${item}.lengthControl.truncate`, checked: truncate }).exists());
+    cy.expect(Select({ name: `${item}.lengthControl.direction`, value: direction }).exists());
+  },
+
   // Cornell format Helper functions
 
   addCornellHeaderFormat() {
@@ -223,8 +242,11 @@ export default {
     cy.do(Select({ name: 'data[4].type' }).choose('Account date'));
     cy.do(Select({ name: 'data[4].dateProperty' }).choose('Creation date'));
     cy.do(Select({ name: 'data[4].format' }).choose('Year (4-digit)'));
-    // There is two America/New_York in the list, so we need to find out the second one
-    // cy.do(Select({ name: 'data[4].timezone' }).choose('America/New_York'));
+    cy.get('select[name="data[4].timezone"]').find('option[value="America/New_York"]').eq(1).then($option => {
+      const $select = $option.prevObject.prevObject;
+      cy.wrap($select).select($option.index());
+    });
+
     cy.do(TextField({ name: 'data[4].placeholder' }).fillIn(''));
 
     cy.do(Select({ name: 'data[5].type' }).choose('Newline (LF)'));
@@ -260,7 +282,7 @@ export default {
       cy.expect(Select({ name: 'data[4].type', value: 'FeeDate' }).exists());
       cy.expect(Select({ name: 'data[4].dateProperty', value: 'CREATED' }).exists());
       cy.expect(Select({ name: 'data[4].format', value: 'YEAR_LONG' }).exists());
-      // cy.expect(Select({ name: 'data[4].timezone', value: 'America/New_York' }).exists());
+      cy.expect(Select({ name: 'data[4].timezone', value: 'America/New_York' }).exists());
       cy.expect(TextField({ name: 'data[4].placeholder', value: '' }).exists());
 
       cy.expect(Select({ name: 'data[5].type', value: 'Newline' }).exists());
@@ -290,7 +312,10 @@ export default {
 
       cy.do(Select({ name: 'header[2].type' }).choose('Current date'));
       cy.do(Select({ name: 'header[2].format' }).choose('YYYYMMDD'));
-      // cy.do(Select({ name: 'header[2].timezone' }).choose('America/New_York'));
+      cy.get('select[name="header[2].timezone"]').find('option[value="America/New_York"]').eq(1).then($option => {
+        const $select = $option.prevObject.prevObject;
+        cy.wrap($select).select($option.index());
+      });
 
       cy.do(Select({ name: 'header[3].type' }).choose('Whitespace'));
       cy.do(TextField({ name: 'header[3].repeat' }).fillIn('1'));
@@ -304,7 +329,10 @@ export default {
 
       cy.do(Select({ name: 'header[6].type' }).choose('Current date'));
       cy.do(Select({ name: 'header[6].format' }).choose('Quarter'));
-      // cy.do(Select({ name: 'header[6].timezone' }).choose('America/New_York'));
+      cy.get('select[name="header[6].timezone"]').find('option[value="America/New_York"]').eq(1).then($option => {
+        const $select = $option.prevObject.prevObject;
+        cy.wrap($select).select($option.index());
+      });
 
       cy.do(Select({ name: 'header[7].type' }).choose('Total amount'));
       cy.get('input[name="header[7].decimal"]').check();
@@ -329,7 +357,7 @@ export default {
 
       cy.expect(Select({ name: 'header[2].type', value: 'CurrentDate' }).exists());
       cy.expect(Select({ name: 'header[2].format', value: 'YYYYMMDD' }).exists());
-      // cy.expect(Select({ name: 'header[2].timezone', value: 'America/New_York' }).exists());
+      cy.expect(Select({ name: 'header[2].timezone', value: 'America/New_York' }).exists());
 
       cy.expect(Select({ name: 'header[3].type', value: 'Space' }).exists());
       cy.expect(TextField({ name: 'header[3].repeat', value: '1' }).exists());
@@ -342,7 +370,7 @@ export default {
 
       cy.expect(Select({ name: 'header[6].type', value: 'CurrentDate' }).exists());
       cy.expect(Select({ name: 'header[6].format', value: 'QUARTER' }).exists());
-      // cy.expect(Select({ name: 'header[6].timezone', value: 'America/New_York' }).exists());
+      cy.expect(Select({ name: 'header[6].timezone', value: 'America/New_York' }).exists());
 
       cy.expect(Select({ name: 'header[7].type', value: 'AggregateTotal' }).exists());
       cy.get('input[name="header[7].decimal"]').should('be.checked');
@@ -373,26 +401,32 @@ export default {
 
     cy.do(Select({ name: 'data[2].type' }).choose('User info'));
     cy.do(Select({ name: 'data[2].userAttribute' }).choose('Username'));
-    // click on gear icon within data[2] section
+    this.setLengthControl('data[2]', '30', ' ', true, 'End');
 
     cy.do(Select({ name: 'data[3].type' }).choose('Tab'));
 
     cy.do(Select({ name: 'data[4].type' }).choose('Account date'));
     cy.do(Select({ name: 'data[4].dateProperty' }).choose('Item due date'));
     cy.do(Select({ name: 'data[4].format' }).choose('YYYYMMDD'));
-    // There is two America/New_York in the list, so we need to find out the second one
-    // cy.do(Select({ name: 'data[4].timezone' }).choose('America/New_York'));
+    cy.get('select[name="data[4].timezone"]').find('option[value="America/New_York"]').eq(1).then($option => {
+      const $select = $option.prevObject.prevObject;
+      cy.wrap($select).select($option.index());
+    });
 
     cy.do(Select({ name: 'data[5].type' }).choose('Tab'));
 
     cy.do(Select({ name: 'data[6].type' }).choose('Current date'));
     cy.do(Select({ name: 'data[6].format' }).choose('Quarter'));
+    cy.get('select[name="data[6].timezone"]').find('option[value="America/New_York"]').eq(1).then($option => {
+      const $select = $option.prevObject.prevObject;
+      cy.wrap($select).select($option.index());
+    });
 
     cy.do(Select({ name: 'data[7].type' }).choose('Tab'));
 
     cy.do(Select({ name: 'data[8].type' }).choose('Fee/fine type'));
     cy.do(Select({ name: 'data[8].feeFineAttribute' }).choose('Type name'));
-    // gear icon
+    this.setLengthControl('data[8]', '12', ' ', true, 'End');
 
     cy.do(Select({ name: 'data[9].type' }).choose('Tab'));
 
@@ -416,24 +450,26 @@ export default {
 
       cy.expect(Select({ name: 'data[2].type', value: 'UserData' }).exists());
       cy.expect(Select({ name: 'data[2].userAttribute', value: 'USERNAME' }).exists());
+      this.verifyLengthControl('data[2]', '30', ' ', true, 'BACK');
 
       cy.expect(Select({ name: 'data[3].type', value: 'Tab' }).exists());
 
       cy.expect(Select({ name: 'data[4].type', value: 'FeeDate' }).exists());
       cy.expect(Select({ name: 'data[4].dateProperty', value: 'DUE' }).exists());
       cy.expect(Select({ name: 'data[4].format', value: 'YYYYMMDD' }).exists());
-      // cy.expect(Select({ name: 'data[4].timezone', value: 'America/New_York' }).exists());
+      cy.expect(Select({ name: 'data[4].timezone', value: 'America/New_York' }).exists());
 
       cy.expect(Select({ name: 'data[5].type', value: 'Tab' }).exists());
 
       cy.expect(Select({ name: 'data[6].type', value: 'CurrentDate' }).exists());
       cy.expect(Select({ name: 'data[6].format', value: 'QUARTER' }).exists());
-      // cy.expect(Select({ name: 'data[6].timezone', value: 'America/New_York' }).exists());
+      cy.expect(Select({ name: 'data[6].timezone', value: 'America/New_York' }).exists());
 
       cy.expect(Select({ name: 'data[7].type', value: 'Tab' }).exists());
 
       cy.expect(Select({ name: 'data[8].type', value: 'FeeFineMetadata' }).exists());
       cy.expect(Select({ name: 'data[8].feeFineAttribute', value: 'FEE_FINE_TYPE_NAME' }).exists());
+      this.verifyLengthControl('data[8]', '12', ' ', true, 'BACK');
 
       cy.expect(Select({ name: 'data[9].type', value: 'Tab' }).exists());
 
