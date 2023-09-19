@@ -1,4 +1,16 @@
+import moment from 'moment';
 import { Button, Modal, MultiSelect, Pane, Select, TextField } from '../../../../interactors';
+import TopMenu from '../topMenu';
+import ExportManagerSearchPane from '../exportManager/exportManagerSearchPane';
+import FileManager from '../../utils/fileManager';
+import ManualCharges from '../settings/users/manualCharges';
+import NewFeeFine from './newFeeFine';
+import UsersOwners from '../settings/users/usersOwners';
+import Users from './users';
+import TransferAccounts from '../settings/users/transferAccounts';
+import ServicePoints from '../settings/tenant/servicePoints/servicePoints';
+import getRandomPostfix from '../../utils/stringTools';
+import permissions from '../../dictionary/permissions';
 
 const rootModal = Modal({ id: 'transfer-modal' });
 const amountTextfield = rootModal.find(TextField({ id: 'amount' }));
@@ -26,8 +38,9 @@ export default {
       cy.do(TextField({ name: 'scheduling.interval' }).fillIn(interval));
 
       // clear all the options
-      cy.get('li[id$=_multiselect_selected]').each(($li) => {
-        cy.wrap($li).find('button').click();
+      cy.get('li[id$=_multiselect_selected]').each(() => {
+        // avoided calling click on the passed elements to prevent interacting with detached elements due to re-renders
+        cy.get('li[id$=_multiselect_selected]').first().find('button').click();
       });
 
       cy.do(MultiSelect({ label: 'Run on weekdays*' }).select(weekDays));
@@ -391,4 +404,136 @@ export default {
   verifyAddDukeHeaderFormat() {},
 
   verifyAddDukeDataFormat() {},
+
+  checkFileContent(fileContent) {
+    cy.intercept('POST', '/data-export-spring/jobs').as('createExportJob');
+
+    cy.wait('@createExportJob').then(({ response }) => {
+      expect(response.statusCode).to.eq(201);
+
+      cy.visit(TopMenu.exportManagerPath);
+      ExportManagerSearchPane.searchBySuccessful();
+      ExportManagerSearchPane.searchById(response.body.name);
+      ExportManagerSearchPane.verifyResultAndClick(response.body.name);
+      ExportManagerSearchPane.clickJobIdInThirdPane(); // triggers file download
+
+      FileManager.verifyFile(
+        (_) => {},
+        'lib_*.dat',
+        (content) => {
+          expect(content).to.be.eq(fileContent);
+        },
+      );
+    });
+  },
+
+  cleanUpCreatedEntities(testData) {
+    ManualCharges.deleteViaApi(testData.feeFineType.id);
+    NewFeeFine.deleteFeeFineAccountViaApi(testData.feeFineAccount.id);
+    UsersOwners.deleteViaApi(testData.feeFineOwnerOne.id);
+    UsersOwners.deleteViaApi(testData.feeFineOwnerTwo.id);
+    Users.deleteViaApi(testData.userData.userId);
+    TransferAccounts.deleteViaApi(testData.transferAccount.id);
+    ServicePoints.deleteViaApi(testData.servicePoint.id);
+  },
+
+  // set up test data for configure-transfer-criteria-example-test-(cornell,duke)
+  setUpTransferCriteriaTestData() {
+    const testData = {
+      servicePoint: ServicePoints.getDefaultServicePointWithPickUpLocation(
+        'Test Service Point',
+        '40000000-0000-1000-8000-000000000000'
+      ),
+      feeFineOwnerOne: {
+        id: '00000000-0000-1000-9000-000000000000',
+        owner: 'FeeFineOwner' + getRandomPostfix()
+      },
+      feeFineOwnerTwo: {
+        id: '10000000-0000-1000-9000-000000000000',
+        owner: 'FeeFineOwner' + getRandomPostfix()
+      },
+      transferAccount: TransferAccounts.getDefaultNewTransferAccount(
+        'a0000000-0000-1000-8000-000000000000',
+        'Test Transfer account'
+      ),
+      feeFineType: {
+        ...ManualCharges.defaultFeeFineType,
+
+        ownerId: '00000000-0000-1000-9000-000000000000',
+        id: '20000000-0000-1000-9000-000000000000'
+      },
+      userData: {},
+      feeFineAccount: {},
+      fileContent: 'LIB02\n' +
+        'testPermFirst\t25.00\t2023\n' +
+        '20000000-0000-1000-9000-000000000000\n'
+    };
+
+    testData.feeFineOwnerOne.servicePointOwner = [
+      {
+        value: testData.servicePoint.id,
+        label: testData.servicePoint.name,
+      },
+    ];
+
+    testData.feeFineOwnerTwo.servicePointOwner = [
+      {
+        value: testData.servicePoint.id,
+        label: testData.servicePoint.name,
+      },
+    ];
+
+
+    // create required entities
+    cy.getAdminToken();
+
+    // create test service point
+    ServicePoints.createViaApi(testData.servicePoint);
+
+    // create fee fine owner
+    UsersOwners.createViaApi(testData.feeFineOwnerOne);
+    UsersOwners.createViaApi(testData.feeFineOwnerTwo);
+
+    //  create fee fine type
+    ManualCharges.createViaApi(testData.feeFineType);
+
+    // create test user
+    cy.createTempUser([
+      permissions.uiFeeFines.gui,
+    ])
+      .then(userProperties => {
+        testData.userData.username = userProperties.username;
+        testData.userData.password = userProperties.password;
+        testData.userData.userId = userProperties.userId;
+        testData.userData.barcode = userProperties.barcode;
+        testData.userData.firstName = userProperties.firstName;
+      })
+      .then(() => {
+        testData.feeFineAccount.userId = testData.userData.userId;
+
+        testData.feeFineAccount = {
+          id: 'bbc0f7f6-7419-4ff7-aed9-fdae0c5b7d64',
+          ownerId: testData.feeFineOwnerOne.id,
+          amount: 25,
+          feeFineId: testData.feeFineType.id,
+          feeFineType: testData.feeFineType.feeFineType,
+          feeFineOwner: testData.feeFineOwnerOne.owner,
+          createdAt: testData.servicePoint.id,
+          dateAction: moment.utc().format(),
+          source: 'ADMINISTRATOR, DIKU',
+          userId: testData.userData.userId,
+          dateCreated: moment.utc().format()
+        };
+
+        NewFeeFine.createViaApi(testData.feeFineAccount).then((feeFineAccountId) => {
+          testData.feeFineAccount.id = feeFineAccountId;
+        });
+      });
+
+    // create test transfer account
+    TransferAccounts.createViaApi({ ...testData.transferAccount, ownerId: testData.feeFineOwnerTwo.id });
+
+
+    return testData;
+  }
 };
