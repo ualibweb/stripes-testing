@@ -6,6 +6,10 @@ describe('Build the Cornell bursar transfer file', () => {
   let testData;
   before('Preconditions', () => {
     testData = TransferFeeFine.setUpTransferCriteriaTestData();
+    testData.fileContent = 'LIB02\n' +
+      'testPermFirst\t25.00\t2023\n' +
+      '20000000-0000-1000-9000-000000000000\n';
+
     cy.loginAsAdmin({
       path: settingsMenu.usersTransferCriteria,
       waiter: TransferFeeFine.waitLoadingTransferCriteria,
@@ -13,7 +17,7 @@ describe('Build the Cornell bursar transfer file', () => {
   });
 
 
-  after('Deleting created entities', () => {
+  after('Delete created entities', () => {
     TransferFeeFine.cleanUpCreatedEntities(testData);
   });
 

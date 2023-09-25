@@ -526,9 +526,7 @@ export default {
       },
       userData: {},
       feeFineAccount: {},
-      fileContent: 'LIB02\n' +
-        'testPermFirst\t25.00\t2023\n' +
-        '20000000-0000-1000-9000-000000000000\n'
+      fileContent: ''
     };
 
     testData.feeFineOwnerOne.servicePointOwner = [
