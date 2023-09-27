@@ -1,21 +1,12 @@
-import TransferFeeFine from '../../../../support/fragments/users/transferFeeFine';
 import settingsMenu from '../../../../support/fragments/settingsMenu';
+import TransferFeeFine from '../../../../support/fragments/users/transferFeeFine';
 
-
-describe('Build the Cornell bursar transfer file', () => {
-  let testData;
-  before('Preconditions', () => {
-    testData = TransferFeeFine.setUpTransferCriteriaTestData('cornell');
-
+describe('Build the Duke bursar transfer file', () => {
+  before(() => {
     cy.loginAsAdmin({
       path: settingsMenu.usersTransferCriteria,
       waiter: TransferFeeFine.waitLoadingTransferCriteria,
     });
-  });
-
-
-  after('Delete created entities', () => {
-    TransferFeeFine.cleanUpCreatedEntities(testData);
   });
 
   it('should be able to open all the panes', () => {
@@ -23,25 +14,24 @@ describe('Build the Cornell bursar transfer file', () => {
     TransferFeeFine.verifyOpenAllPanes();
   });
 
-
   it('should be able to set scheduling', () => {
     TransferFeeFine.setTransferCriteriaScheduling(
       'Weeks',
-      '1',
-      '11:00 P',
-      ['Monday']
+      '0',
+      '12:00 A',
+      ['Monday', 'Thursday']
     );
     TransferFeeFine.verifyTransferCriteriaScheduling(
       'WEEK',
-      '1',
-      '11:00 PM',
-      ['Monday']
+      '0',
+      '12:00 AM',
+      ['Monday', 'Thursday']
     );
   });
 
-  it('should be able to set criteria to filter by owner', () => {
-    TransferFeeFine.setCriteriaFeeFineOwner(testData.feeFineOwnerOne.owner);
-    TransferFeeFine.verifyCriteriaFeeFineOwner(testData.feeFineOwnerOne.id);
+  it('should be able to set no criteria', () => {
+    TransferFeeFine.setCriteria(false);
+    TransferFeeFine.verifyCriteria(false);
   });
 
   // Aggregate by patron: Box unchecked
@@ -54,16 +44,16 @@ describe('Build the Cornell bursar transfer file', () => {
   it('should be able to set header format', () => {
     TransferFeeFine.clearFormat('header');
     TransferFeeFine.verifyClearFormat('header');
-    TransferFeeFine.addCornellHeaderFormat();
-    TransferFeeFine.verifyAddCornellHeaderFormat();
+    TransferFeeFine.addAlabamaHeaderFormat();
+    TransferFeeFine.verifyAddAlabamaHeaderFormat();
   });
 
   // Account Data Format
   it('should be able to set account data format', () => {
     TransferFeeFine.clearFormat('data');
     TransferFeeFine.verifyClearFormat('data');
-    TransferFeeFine.addCornellDataFormat();
-    TransferFeeFine.verifyAddCornellDataFormat();
+    TransferFeeFine.addAlabamaDataFormat();
+    TransferFeeFine.verifyAddAlabamaDataFormat();
   });
 
   // Footer Format
@@ -72,18 +62,14 @@ describe('Build the Cornell bursar transfer file', () => {
     TransferFeeFine.verifyClearFormat('footer');
   });
 
-
   // Transfer account data to
   it('should be able to set transfer account data to', () => {
-    TransferFeeFine.setTransferAccount(testData.feeFineOwnerTwo.owner, testData.transferAccount.accountName);
-    TransferFeeFine.verifyTransferAccount(testData.feeFineOwnerTwo.id, testData.transferAccount.id);
+    TransferFeeFine.setTransferAccount('Lost Item Fine Office', 'acct');
+    TransferFeeFine.verifyTransferAccount('b25fd8e7-a0e7-4690-ab0b-94039739c0db', '90c1820f-60bf-4b9a-99f5-d677ea78ddca');
   });
 
   it('should be able to run manually', () => {
     TransferFeeFine.runManually();
     TransferFeeFine.verifyRunManually();
-
-    // check file content
-    TransferFeeFine.checkFileContent(testData.fileContent);
   });
 });

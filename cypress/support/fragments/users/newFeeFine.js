@@ -49,6 +49,10 @@ const getNewFeeFineAccount = (values) => {
     body.dateCreated = values.dateCreated;
   }
 
+  if ('dueDate' in values) {
+    body.dueDate = values.dueDate;
+  }
+
   return body;
 };
 

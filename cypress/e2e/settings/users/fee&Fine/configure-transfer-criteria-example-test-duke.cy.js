@@ -4,11 +4,7 @@ import TransferFeeFine from '../../../../support/fragments/users/transferFeeFine
 describe('Build the Duke bursar transfer file', () => {
   let testData;
   before(() => {
-    testData = TransferFeeFine.setUpTransferCriteriaTestData();
-    testData.fileContent = 'LIB02\n' +
-      'testPermFirst\t25.00\t2023\n' +
-      '20000000-0000-1000-9000-000000000000\n';
-
+    testData = TransferFeeFine.setUpTransferCriteriaTestData('duke');
     cy.loginAsAdmin({
       path: settingsMenu.usersTransferCriteria,
       waiter: TransferFeeFine.waitLoadingTransferCriteria,
