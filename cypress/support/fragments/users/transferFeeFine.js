@@ -107,6 +107,7 @@ export default {
     if (truncate) {
       cy.do(Checkbox({ name: `${item}.lengthControl.truncate` }).click());
     }
+    cy.do(Select({ name: `${item}.lengthControl.direction` }).choose('End')); // todo: to fix bug
     cy.do(Select({ name: `${item}.lengthControl.direction` }).choose(direction));
   },
 
@@ -503,7 +504,6 @@ export default {
   },
   checkFileContent(fileContent) {
     cy.intercept('POST', '/data-export-spring/jobs', (req) => {
-      console.log(req);
     }).as('createExportJob');
 
     cy.wait('@createExportJob').then(({ response }) => {
@@ -597,21 +597,6 @@ export default {
     // create required entities
     cy.getAdminToken();
 
-    // ManualCharges.deleteViaApi(testData.feeFineType.id);
-    // NewFeeFine.deleteFeeFineAccountViaApi(testData.feeFineAccount.id);
-    // UsersOwners.deleteViaApi(testData.feeFineOwnerOne.id);
-    // UsersOwners.deleteViaApi(testData.feeFineOwnerTwo.id);
-    // Users.deleteViaApi(testData.userData.userId);
-    // TransferAccounts.deleteViaApi(testData.transferAccount.id);
-    // ServicePoints.deleteViaApi(testData.servicePoint.id);
-    //
-    // cy.getUsers({ limit: 1, query: '"externalSystemId"="30000000-0000-1000-9000-000000000000"' })
-    //   .then((users) => {
-    //     console.log('users', users);
-    //     // NewFeeFine.deleteFeeFineAccountViaApi('bbc0f7f6-7419-4ff7-aed9-fdae0c5b7d64');
-    //     Users.deleteViaApi(users[0].id);
-    //   });
-
     // create test service point
     ServicePoints.createViaApi(testData.servicePoint);
 
@@ -627,7 +612,6 @@ export default {
       permissions.uiFeeFines.gui,
     ])
       .then(userProperties => {
-        console.log(userProperties);
         testData.userData.username = userProperties.username;
         testData.userData.password = userProperties.password;
         testData.userData.userId = userProperties.userId;
@@ -636,7 +620,7 @@ export default {
       })
       .then(() => {
         // add external id for duke test
-        if (testId === 'duke') {
+        if (testId === 'duke' || testId === 'bama') {
           cy.getUsers({ limit: 1, query: `"username"="${testData.userData.username}"` })
             .then((users) => {
               UserEdit.updateExternalIdViaApi(users[0], testData.userData.externalId);
@@ -673,7 +657,13 @@ export default {
             'testPermFirst\t25.00\t' + feeFineDateCreated.format('YYYY') + '\n' +
             '20000000-0000-1000-9000-000000000000\n';
         } else if (testId === 'bama') {
-          testData.fileContent = '';
+          const currDayOfYear = currentDate.dayOfYear().toString();
+          const currentDateQuarter = currentDate.quarter().toString();
+          const currentYear = currentDate.format('YYYY');
+          testData.fileContent = '$$$LIB' + currDayOfYear + currentDate.format('MMDDYYYY') +
+            'Library B&F\tYBR0000125.00' + currentYear + currentDateQuarter + ' WMURPHY' +
+            '\n64A' + testData.userData.externalId
+            + '00000                000025.00                                                N\n';
         }
       });
 
@@ -727,6 +717,7 @@ export default {
       cy.get('input[name="header[7].decimal"]').check();
 
       cy.do(Select({ name: 'header[8].type' }).choose('Current date'));
+      cy.do(Select({ name: 'header[8].format' }).choose('Month')); // to fix bug
       cy.do(Select({ name: 'header[8].format' }).choose('Year (4-digit)'));
       cy.get('select[name="header[8].timezone"]').find('option[value="America/Chicago"]').eq(1).then($option => {
         const $select = $option.prevObject.prevObject;

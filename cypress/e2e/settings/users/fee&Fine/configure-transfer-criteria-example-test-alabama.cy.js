@@ -2,11 +2,18 @@ import settingsMenu from '../../../../support/fragments/settingsMenu';
 import TransferFeeFine from '../../../../support/fragments/users/transferFeeFine';
 
 describe('Build the Duke bursar transfer file', () => {
-  before(() => {
+  let testData;
+  before('Preconditions', () => {
+    testData = TransferFeeFine.setUpTransferCriteriaTestData('bama');
+
     cy.loginAsAdmin({
       path: settingsMenu.usersTransferCriteria,
       waiter: TransferFeeFine.waitLoadingTransferCriteria,
     });
+  });
+
+  after('Delete created entities', () => {
+    TransferFeeFine.cleanUpCreatedEntities(testData);
   });
 
   it('should be able to open all the panes', () => {
@@ -64,12 +71,15 @@ describe('Build the Duke bursar transfer file', () => {
 
   // Transfer account data to
   it('should be able to set transfer account data to', () => {
-    TransferFeeFine.setTransferAccount('Lost Item Fine Office', 'acct');
-    TransferFeeFine.verifyTransferAccount('b25fd8e7-a0e7-4690-ab0b-94039739c0db', '90c1820f-60bf-4b9a-99f5-d677ea78ddca');
+    TransferFeeFine.setTransferAccount(testData.feeFineOwnerTwo.owner, testData.transferAccount.accountName);
+    TransferFeeFine.verifyTransferAccount(testData.feeFineOwnerTwo.id, testData.transferAccount.id);
   });
 
   it('should be able to run manually', () => {
     TransferFeeFine.runManually();
     TransferFeeFine.verifyRunManually();
+
+    // check file content
+    TransferFeeFine.checkFileContent(testData.fileContent);
   });
 });
