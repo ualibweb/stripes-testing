@@ -1,5 +1,13 @@
 import { HTML, including } from '@interactors/html';
-import { Pane, Section, Heading, KeyValue, Button } from '../../../../interactors';
+import {
+  Pane,
+  Section,
+  Heading,
+  KeyValue,
+  Button,
+  Accordion,
+  MultiColumnListCell,
+} from '../../../../interactors';
 
 const requestDetailsSection = Pane({ id: 'instance-details' });
 const titleInformationSection = Section({ id: 'title-info' });
@@ -9,6 +17,9 @@ const requesterInfoSection = Section({ id: 'requester-info' });
 const staffNotesInfoSection = Section({ id: 'staff-notes' });
 const actionsButton = requestDetailsSection.find(Button('Actions'));
 const moveRequestButton = Button('Move request');
+const fulfillmentInProgressAccordion = Accordion({
+  id: 'fulfillment-in-progress',
+});
 
 export default {
   waitLoading: () => {
@@ -34,17 +45,27 @@ export default {
       cy.expect([
         itemInformationSection.find(KeyValue('Item barcode', { value: data.itemBarcode })).exists(),
         itemInformationSection.find(KeyValue('Title', { value: data.title })).exists(),
-        itemInformationSection.find(KeyValue('Effective location', { value: data.effectiveLocation })).exists(),
+        itemInformationSection
+          .find(KeyValue('Effective location', { value: data.effectiveLocation }))
+          .exists(),
         itemInformationSection.find(KeyValue('Item status', { value: data.itemStatus })).exists(),
-        itemInformationSection.find(KeyValue('Requests on item', { value: data.requestsOnItem })).exists(),
+        itemInformationSection
+          .find(KeyValue('Requests on item', { value: data.requestsOnItem }))
+          .exists(),
       ]);
-    } else itemInformationSection.find(HTML(including('There is no item information for this request.')));
+    } else {
+      itemInformationSection.find(
+        HTML(including('There is no item information for this request.')),
+      );
+    }
   },
 
   checkRequestInformation: (data) => {
     cy.expect([
       requestInfoSection.find(KeyValue('Request type', { value: data.type })).exists(),
-      requestInfoSection.find(KeyValue('Request status', { value: including(data.status) })).exists(),
+      requestInfoSection
+        .find(KeyValue('Request status', { value: including(data.status) }))
+        .exists(),
       requestInfoSection.find(KeyValue('Request level', { value: data.level })).exists(),
     ]);
   },
@@ -55,8 +76,12 @@ export default {
       requesterInfoSection.find(HTML(including(data.lastName))).exists(),
       requesterInfoSection.find(HTML(including(data.barcode))).exists(),
       requesterInfoSection.find(KeyValue('Requester patron group', { value: data.group })).exists(),
-      requesterInfoSection.find(KeyValue('Fulfillment preference', { value: data.preference })).exists(),
-      requesterInfoSection.find(KeyValue('Pickup service point', { value: data.pickupSP })).exists(),
+      requesterInfoSection
+        .find(KeyValue('Fulfillment preference', { value: data.preference }))
+        .exists(),
+      requesterInfoSection
+        .find(KeyValue('Pickup service point', { value: data.pickupSP }))
+        .exists(),
     ]);
   },
 
@@ -66,5 +91,18 @@ export default {
 
   openMoveRequest() {
     cy.do(moveRequestButton.click());
-  }
+  },
+
+  requestQueueOnInstance(instanceTitle) {
+    cy.do([actionsButton.click(), Button('Reorder queue').click()]);
+    cy.expect(HTML(`Request queue on instance • ${instanceTitle} /.`).exists());
+  },
+
+  checkRequestMovedToFulfillmentInProgress(itemBarcode) {
+    cy.expect(
+      fulfillmentInProgressAccordion
+        .find(MultiColumnListCell({ row: 0, content: itemBarcode }))
+        .exists(),
+    );
+  },
 };

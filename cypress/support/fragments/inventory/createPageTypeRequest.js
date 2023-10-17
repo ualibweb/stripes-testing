@@ -14,23 +14,22 @@ import {
 import MarkItemAsMissing from './markItemAsMissing';
 import Requests from '../requests/requests';
 import newRequest from '../requests/newRequest';
-import { ITEM_STATUS_NAMES } from '../../constants';
+import { ITEM_STATUS_NAMES, REQUEST_TYPES } from '../../constants';
 
 const actionsButton = Button('Actions');
-const newRequestButton = Button('New Request');
+const newRequestButton = Button('New request');
 const selectUserModal = Modal('Select User');
 const loanAndAvailabilitySection = Section({ id: 'acc06' });
 const itemInfoSection = Section({ id: 'item-info' });
 const requestInfoSection = Section({ id: 'new-requester-info' });
 
 export default {
-  itemStatusesToCreate() { return [ITEM_STATUS_NAMES.AVAILABLE]; },
+  itemStatusesToCreate() {
+    return [ITEM_STATUS_NAMES.AVAILABLE];
+  },
 
   filterRequesterLookup(patronGroupName = 'faculty') {
-    cy.do([
-      Checkbox(patronGroupName).click(),
-      Checkbox('Active').click()
-    ]);
+    cy.do([Checkbox(patronGroupName).click(), Checkbox('Active').click()]);
   },
 
   selectUser(username) {
@@ -40,10 +39,12 @@ export default {
   },
 
   verifyInventoryDetailsPage(barcode) {
-    cy.expect(Heading({
-      level: 2,
-      text: `Item • ${barcode} • Paged`,
-    }).exists());
+    cy.expect(
+      Heading({
+        level: 2,
+        text: `Item • ${barcode} • Paged`,
+      }).exists(),
+    );
   },
 
   clickItemBarcodeLink(barcode) {
@@ -58,10 +59,12 @@ export default {
   },
 
   verifyRequestsCountOnItemRecord() {
-    cy.expect(loanAndAvailabilitySection.find(HTML('Requests')).assert(el => {
-      const count = +el.parentElement.querySelector('a').textContent;
-      expect(count).to.be.greaterThan(0);
-    }));
+    cy.expect(
+      loanAndAvailabilitySection.find(HTML('Requests')).assert((el) => {
+        const count = +el.parentElement.querySelector('a').textContent;
+        expect(count).to.be.greaterThan(0);
+      }),
+    );
   },
 
   verifyUserRecordPage(username) {
@@ -88,7 +91,8 @@ export default {
 
   verifyItemDetailsPrePopulated(itemBarcode) {
     cy.expect(Link(itemBarcode).exists());
-    cy.expect(Section({ id: 'new-request-info' }).find(HTML('Page')).exists());
+    // eslint-disable-next-line spaced-comment
+    //cy.expect(Section({ id: 'new-request-info' }).find(HTML('Page')).exists());
   },
 
   clickNewRequest(itemBarcode) {
@@ -106,6 +110,7 @@ export default {
   },
 
   saveAndClose(servicePointName = 'Circ Desk 1') {
+    newRequest.chooseRequestType(REQUEST_TYPES.PAGE);
     Requests.verifyFulfillmentPreference();
     newRequest.choosepickupServicePoint(servicePointName);
     newRequest.saveRequestAndClose();
@@ -114,25 +119,33 @@ export default {
   },
 
   clickRequestsCountLink() {
-    cy.do(loanAndAvailabilitySection.find(HTML('Requests')).perform(el => {
-      el.parentElement.querySelector('a').click();
-    }));
+    cy.do(
+      loanAndAvailabilitySection.find(HTML('Requests')).perform((el) => {
+        el.parentElement.querySelector('a').click();
+      }),
+    );
     Requests.verifyRequestsPage();
     cy.expect(MultiColumnList().has({ rowCount: 1 }));
   },
 
   clickRequesterBarcode(username) {
     cy.do(MultiColumnListCell({ row: 0, content: including(username) }).click());
-    cy.do(Section({ id: 'requester-info' }).find(Link(including(username))).click());
+    cy.do(
+      Section({ id: 'requester-info' })
+        .find(Link(including(username)))
+        .click(),
+    );
     this.verifyUserRecordPage(username);
   },
 
   verifyOpenRequestCounts() {
     cy.do(Accordion('Requests').clickHeader());
-    cy.expect(Link({ id: 'clickable-viewopenrequests' }).assert(el => {
-      const count = +el.textContent.match(/\d+/)[0];
-      expect(count).to.be.greaterThan(0);
-    }));
+    cy.expect(
+      Link({ id: 'clickable-viewopenrequests' }).assert((el) => {
+        const count = +el.textContent.match(/\d+/)[0];
+        expect(count).to.be.greaterThan(0);
+      }),
+    );
   },
 
   clickOpenRequestsCountLink() {

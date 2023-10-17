@@ -37,7 +37,7 @@ describe('Permissions Tags', () => {
           permissions.uiUsersPermissions.gui,
           permissions.uiViewTagsSettings.gui,
         ],
-        patronGroup.name
+        patronGroup.name,
       ).then((userProperties) => {
         userData = userProperties;
         UserEdit.addServicePointViaApi(servicePointId, userData.userId, servicePointId);
@@ -60,7 +60,7 @@ describe('Permissions Tags', () => {
   });
 
   it(
-    'C396357 Verify that new permission to view all the Tags settings is added',
+    'C396357 Verify that new permission to view all the Tags settings is added (volaris)',
     { tags: [TestTypes.criticalPath, devTeams.volaris] },
     () => {
       TagsGeneral.changeEnableTagsStatus('disable');
@@ -75,6 +75,6 @@ describe('Permissions Tags', () => {
         waiter: TagsGeneral.waitLoading,
       });
       TagsGeneral.checkEnableTagsNotAvailable();
-    }
+    },
   );
 });

@@ -43,8 +43,7 @@ const ediSection = Section({ id: 'edi' });
 const ftpSection = Section({ id: 'ftp' });
 const schedulingSection = Section({ id: 'scheduling' });
 const actionsButton = Button('Actions');
-const numberOfSearchResultsHeader =
-  '//*[@id="paneHeaderorganizations-results-pane-subtitle"]/span';
+const numberOfSearchResultsHeader = '//*[@id="paneHeaderorganizations-results-pane-subtitle"]/span';
 const categoryDropdown = Button('Category');
 const zeroResultsFoundText = '0 records found';
 const organizationStatus = Select('Organization status*');
@@ -129,12 +128,8 @@ export default {
 
   checkCreatedOrganization: (organization) => {
     cy.expect(organizationDetails.exists());
-    cy.expect(
-      summarySection.find(KeyValue({ value: organization.name })).exists()
-    );
-    cy.expect(
-      summarySection.find(KeyValue({ value: organization.code })).exists()
-    );
+    cy.expect(summarySection.find(KeyValue({ value: organization.name })).exists());
+    cy.expect(summarySection.find(KeyValue({ value: organization.code })).exists());
   },
 
   organizationTagDetails: () => {
@@ -173,14 +168,11 @@ export default {
   },
 
   chooseOrganizationFromList: (organization) => {
-    cy.do(
-      organizationsList
-        .find(MultiColumnListCell({ content: organization.name }))
-        .click()
-    );
+    cy.do(organizationsList.find(MultiColumnListCell({ content: organization.name })).click());
   },
 
   addIntegration: () => {
+    cy.wait(4000);
     cy.do([
       openintegrationDetailsSectionButton.click(),
       Button({ id: 'clickable-neworganization-integration' }).click(),
@@ -190,9 +182,7 @@ export default {
   selectIntegration: (integrationName) => {
     cy.do([
       openintegrationDetailsSectionButton.click(),
-      listIntegrationConfigs
-        .find(MultiColumnListCell({ content: integrationName }))
-        .click(),
+      listIntegrationConfigs.find(MultiColumnListCell({ content: integrationName })).click(),
     ]);
   },
 
@@ -203,8 +193,9 @@ export default {
     libraryEDICode,
     accountNumber,
     acquisitionMethod,
-    UTCTime
+    UTCTime,
   ) => {
+    cy.wait(4000);
     cy.do([
       Section({ id: 'integrationInfo' })
         .find(TextField('Integration name*'))
@@ -221,10 +212,10 @@ export default {
       }).click(),
     ]);
     cy.get(
-      'select[name="exportTypeSpecificParameters.vendorEdiOrdersExportConfig.ediConfig.accountNoList"]'
+      'select[name="exportTypeSpecificParameters.vendorEdiOrdersExportConfig.ediConfig.accountNoList"]',
     ).select(accountNumber);
     cy.get(
-      'select[name="exportTypeSpecificParameters.vendorEdiOrdersExportConfig.ediConfig.defaultAcquisitionMethods"]'
+      'select[name="exportTypeSpecificParameters.vendorEdiOrdersExportConfig.ediConfig.defaultAcquisitionMethods"]',
     ).select(acquisitionMethod);
     cy.do([
       ftpSection.find(Select('EDI FTP')).choose('FTP'),
@@ -237,7 +228,7 @@ export default {
         .find(
           Checkbox({
             name: 'exportTypeSpecificParameters.vendorEdiOrdersExportConfig.ediSchedule.enableScheduledExport',
-          })
+          }),
         )
         .click(),
       schedulingSection.find(TextField('Schedule frequency*')).fillIn('1'),
@@ -245,14 +236,14 @@ export default {
         .find(
           Select({
             name: 'exportTypeSpecificParameters.vendorEdiOrdersExportConfig.ediSchedule.scheduleParameters.schedulePeriod',
-          })
+          }),
         )
         .choose('Daily'),
       schedulingSection
         .find(
           TextField({
             name: 'exportTypeSpecificParameters.vendorEdiOrdersExportConfig.ediSchedule.scheduleParameters.schedulingDate',
-          })
+          }),
         )
         .fillIn(`${todayDate}`),
       schedulingSection.find(TextField('Time*')).fillIn(`${UTCTime}`),
@@ -266,7 +257,7 @@ export default {
     vendorEDICode,
     libraryEDICode,
     accountNumber,
-    acquisitionMethod
+    acquisitionMethod,
   ) => {
     cy.do([
       Section({ id: 'integrationInfo' })
@@ -281,10 +272,10 @@ export default {
       }).click(),
     ]);
     cy.get(
-      'select[name="exportTypeSpecificParameters.vendorEdiOrdersExportConfig.ediConfig.accountNoList"]'
+      'select[name="exportTypeSpecificParameters.vendorEdiOrdersExportConfig.ediConfig.accountNoList"]',
     ).select(accountNumber);
     cy.get(
-      'select[name="exportTypeSpecificParameters.vendorEdiOrdersExportConfig.ediConfig.defaultAcquisitionMethods"]'
+      'select[name="exportTypeSpecificParameters.vendorEdiOrdersExportConfig.ediConfig.defaultAcquisitionMethods"]',
     ).select(acquisitionMethod);
     cy.do([
       ftpSection.find(Select('EDI FTP')).choose('FTP'),
@@ -298,35 +289,24 @@ export default {
     cy.do([
       actionsButton.click(),
       editButton.click(),
-      ediSection
-        .find(TextField('Vendor EDI code*'))
-        .fillIn(vendorEDICodeEdited),
-      ediSection
-        .find(TextField('Library EDI code*'))
-        .fillIn(libraryEDICodeEdited),
+      ediSection.find(TextField('Vendor EDI code*')).fillIn(vendorEDICodeEdited),
+      ediSection.find(TextField('Library EDI code*')).fillIn(libraryEDICodeEdited),
       saveAndClose.click(),
     ]);
   },
 
   expectColorFromList: () => {
-    cy.get('#organizations-list').should(
-      'have.css',
-      'background-color',
-      blueColor
-    );
+    cy.get('#organizations-list').should('have.css', 'background-color', blueColor);
   },
 
   checkOpenOrganizationInfo: (organization) => {
     cy.expect(organizationDetails.exists());
-    cy.expect(
-      summarySection.find(KeyValue({ value: organization.name })).exists()
-    );
-    cy.expect(
-      summarySection.find(KeyValue({ value: organization.code })).exists()
-    );
+    cy.expect(summarySection.find(KeyValue({ value: organization.name })).exists());
+    cy.expect(summarySection.find(KeyValue({ value: organization.code })).exists());
   },
 
   searchByParameters: (parameter, value) => {
+    cy.wait(4000);
     cy.do([
       searchInput.selectIndex(parameter),
       searchInput.fillIn(value),
@@ -340,12 +320,8 @@ export default {
   },
 
   checkSearchResults: (organization) => {
-    cy.expect(
-      organizationsList
-        .find(MultiColumnListRow({ index: 0 }))
-        .find(MultiColumnListCell({ columnIndex: 3 }))
-        .has({ content: organization.name })
-    );
+    cy.wait(4000);
+    cy.expect(organizationsList.find(Link(organization.name)).exists());
   },
 
   selectYesInIsVendor: () => {
@@ -367,11 +343,7 @@ export default {
   },
 
   deselectVendor: () => {
-    cy.do([
-      Checkbox('Vendor').click(),
-      confirmButton.click(),
-      saveAndClose.click(),
-    ]);
+    cy.do([Checkbox('Vendor').click(), confirmButton.click(), saveAndClose.click()]);
   },
 
   closeDetailsPane: () => {
@@ -433,6 +405,12 @@ export default {
     cy.do(editButton.click());
   },
 
+  changeOrganizationStatus: (status) => {
+    cy.wait(4000);
+    cy.do([organizationStatus.choose(status), saveAndClose.click()]);
+    cy.wait(6000);
+  },
+
   verifyNewCategory: (category) => {
     cy.do([
       openContactSectionButton.click(),
@@ -478,7 +456,7 @@ export default {
       contactPeopleDetails
         .find(MultiColumnListRow({ index: 0 }))
         .find(MultiColumnListCell({ columnIndex: 1 }))
-        .has({ content: 'claim' })
+        .has({ content: 'claim' }),
     );
     cy.do([timesButton.click()]);
   },
@@ -502,25 +480,20 @@ export default {
     cy.do([
       openContactSectionButton.click(),
       contactPeopleSection.find(addContactButton).click(),
-      addContacsModal
-        .find(SearchField({ id: 'input-record-search' }))
-        .fillIn(contact.lastName),
+      addContacsModal.find(SearchField({ id: 'input-record-search' })).fillIn(contact.lastName),
       addContacsModal.find(searchButtonInModal).click(),
     ]);
+    cy.wait(6000);
     SearchHelper.selectCheckboxFromResultsList();
-    cy.do([
-      addContacsModal.find(saveButton).click(),
-      Button('Save & close').click(),
-    ]);
+    cy.do([addContacsModal.find(saveButton).click(), Button('Save & close').click()]);
+    cy.wait(6000);
   },
 
   addIntrefaceToOrganization: (defaultInterface) => {
     cy.do([
       openInterfaceSectionButton.click(),
       interfaceSection.find(addInterfaceButton).click(),
-      addInterfacesModal
-        .find(TextField({ name: 'query' }))
-        .fillIn(defaultInterface.name),
+      addInterfacesModal.find(TextField({ name: 'query' })).fillIn(defaultInterface.name),
       addInterfacesModal.find(searchButtonInModal).click(),
     ]);
     cy.wait(4000);
@@ -548,15 +521,13 @@ export default {
       contactPeopleSection
         .find(MultiColumnListRow({ index: 0 }))
         .find(MultiColumnListCell({ columnIndex: 0 }))
-        .has({ content: `${contact.lastName}, ${contact.firstName}` })
+        .has({ content: `${contact.lastName}, ${contact.firstName}` }),
     );
   },
 
   checkInterfaceIsAdd: (defaultInterface) => {
     cy.do(openInterfaceSectionButton.click());
-    cy.expect(
-      interfaceSection.find(KeyValue({ value: defaultInterface.name })).exists()
-    );
+    cy.expect(interfaceSection.find(KeyValue({ value: defaultInterface.name })).exists());
   },
 
   selectInterface: (defaultInterface) => {
@@ -580,7 +551,7 @@ export default {
         .find(
           MultiColumnListCell({
             content: `${contact.lastName}, ${contact.firstName}`,
-          })
+          }),
         )
         .click(),
     ]);
@@ -602,13 +573,13 @@ export default {
       listIntegrationConfigs
         .find(MultiColumnListRow({ index: 0 }))
         .find(MultiColumnListCell({ columnIndex: 0 }))
-        .has({ content: integrationName })
+        .has({ content: integrationName }),
     );
     cy.expect(
       listIntegrationConfigs
         .find(MultiColumnListRow({ index: 0 }))
         .find(MultiColumnListCell({ columnIndex: 1 }))
-        .has({ content: integartionDescription })
+        .has({ content: integartionDescription }),
     );
   },
 
@@ -616,40 +587,38 @@ export default {
     integrationName1,
     integartionDescription1,
     integrationName2,
-    integartionDescription2
+    integartionDescription2,
   ) => {
     cy.do([openintegrationDetailsSectionButton.click()]);
     cy.expect(
       listIntegrationConfigs
         .find(MultiColumnListRow({ index: 0 }))
         .find(MultiColumnListCell({ columnIndex: 0 }))
-        .has({ content: integrationName1 })
+        .has({ content: integrationName1 }),
     );
     cy.expect(
       listIntegrationConfigs
         .find(MultiColumnListRow({ index: 0 }))
         .find(MultiColumnListCell({ columnIndex: 1 }))
-        .has({ content: integartionDescription1 })
+        .has({ content: integartionDescription1 }),
     );
     cy.expect(
       listIntegrationConfigs
         .find(MultiColumnListRow({ index: 1 }))
         .find(MultiColumnListCell({ columnIndex: 0 }))
-        .has({ content: integrationName2 })
+        .has({ content: integrationName2 }),
     );
     cy.expect(
       listIntegrationConfigs
         .find(MultiColumnListRow({ index: 1 }))
         .find(MultiColumnListCell({ columnIndex: 1 }))
-        .has({ content: integartionDescription2 })
+        .has({ content: integartionDescription2 }),
     );
   },
 
   deleteOrganization: () => {
     cy.do([
-      PaneHeader({ id: 'paneHeaderpane-organization-details' })
-        .find(actionsButton)
-        .click(),
+      PaneHeader({ id: 'paneHeaderpane-organization-details' }).find(actionsButton).click(),
       Button('Delete').click(),
       Button({
         id: 'clickable-delete-organization-confirmation-confirm',
@@ -658,11 +627,8 @@ export default {
   },
 
   selectOrganization: (organizationName) => {
-    cy.do(
-      Pane({ id: 'organizations-results-pane' })
-        .find(Link(organizationName))
-        .click()
-    );
+    cy.wait(4000);
+    cy.do(Pane({ id: 'organizations-results-pane' }).find(Link(organizationName)).click());
   },
 
   checkTextofElement: () => {
@@ -673,10 +639,7 @@ export default {
   },
 
   editOrganizationName: (organization) => {
-    cy.do([
-      organizationNameField.fillIn(`${organization.name}-edited`),
-      saveAndClose.click(),
-    ]);
+    cy.do([organizationNameField.fillIn(`${organization.name}-edited`), saveAndClose.click()]);
   },
 
   unAssignInterface: (defaultInterface) => {

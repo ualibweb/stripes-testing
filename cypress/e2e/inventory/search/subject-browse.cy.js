@@ -10,6 +10,7 @@ import BrowseSubjects from '../../../support/fragments/inventory/search/browseSu
 import DataImport from '../../../support/fragments/data_import/dataImport';
 import Logs from '../../../support/fragments/data_import/logs/logs';
 import JobProfiles from '../../../support/fragments/data_import/job_profiles/jobProfiles';
+import Parallelization from '../../../support/dictionary/parallelization';
 
 describe('Inventory > Subject Browse', () => {
   const testData = {
@@ -17,32 +18,33 @@ describe('Inventory > Subject Browse', () => {
   };
 
   const fileName = `testMarcFile.${getRandomPostfix()}.mrc`;
-  const jobProfileToRun = 'Default - Create instance and SRS MARC Bib'
+  const jobProfileToRun = 'Default - Create instance and SRS MARC Bib';
 
-  let createdInstanceIDs = [];
+  const createdInstanceIDs = [];
 
   before('Creating user and instance', () => {
-    cy.createTempUser([
-        permissions.uiSubjectBrowse.gui
-    ]).then(userProperties => {
+    cy.createTempUser([permissions.uiSubjectBrowse.gui]).then((userProperties) => {
       testData.user = userProperties;
 
       cy.loginAsAdmin({ path: TopMenu.dataImportPath, waiter: DataImport.waitLoading }).then(() => {
         DataImport.uploadFile('marcFileForC350387.mrc', fileName);
         JobProfiles.waitLoadingList();
-        JobProfiles.searchJobProfileForImport(jobProfileToRun);
+        JobProfiles.search(jobProfileToRun);
         JobProfiles.runImportFile();
         JobProfiles.waitFileIsImported(fileName);
         Logs.checkStatusOfJobProfile('Completed');
         Logs.openFileDetails(fileName);
         for (let i = 0; i < 2; i++) {
-          Logs.getCreatedItemsID(i).then(link => {
+          Logs.getCreatedItemsID(i).then((link) => {
             createdInstanceIDs.push(link.split('/')[5]);
           });
         }
       });
 
-    cy.login(testData.user.username, testData.user.password, { path: TopMenu.inventoryPath, waiter: InventorySearchAndFilter.waitLoading });
+      cy.login(testData.user.username, testData.user.password, {
+        path: TopMenu.inventoryPath,
+        waiter: InventorySearchAndFilter.waitLoading,
+      });
     });
   });
 
@@ -51,23 +53,23 @@ describe('Inventory > Subject Browse', () => {
       InventoryInstance.deleteInstanceViaApi(id);
     });
     Users.deleteViaApi(testData.user.userId);
-    cy.loginAsAdmin({ path: TopMenu.dataImportPath, waiter: DataImport.waitLoading });
-    DataImport.selectLog();
-    DataImport.openDeleteImportLogsModal();
-    DataImport.confirmDeleteImportLogs();
   });
 
-  it('C350387 Verify the "Browse subjects" result list (spitfire)', { tags: [TestTypes.criticalPath, DevTeams.spitfire] }, () => {
-    InventorySearchAndFilter.switchToBrowseTab();
-    BrowseSubjects.searchBrowseSubjects(testData.testValue);
-    BrowseSubjects.checkSearchResultsTable();
-    BrowseSubjects.checkResultAndItsRow(5, `${testData.testValue}would be here`);
-    BrowseSubjects.checkPaginationButtons();
+  it(
+    'C350387 Verify the "Browse subjects" result list (spitfire)',
+    { tags: [TestTypes.criticalPath, DevTeams.spitfire, Parallelization.nonParallel] },
+    () => {
+      InventorySearchAndFilter.switchToBrowseTab();
+      BrowseSubjects.searchBrowseSubjects(testData.testValue);
+      BrowseSubjects.checkSearchResultsTable();
+      BrowseSubjects.checkResultAndItsRow(5, `${testData.testValue}would be here`);
+      BrowseSubjects.checkPaginationButtons();
 
-    BrowseSubjects.clickPreviousPaginationButton();
-    BrowseSubjects.checkAbsenceOfResultAndItsRow(5, `${testData.testValue}would be here`)
+      BrowseSubjects.clickPreviousPaginationButton();
+      BrowseSubjects.checkAbsenceOfResultAndItsRow(5, `${testData.testValue}would be here`);
 
-    BrowseSubjects.clickNextPaginationButton();
-    BrowseSubjects.checkResultAndItsRow(5, `${testData.testValue}would be here`);
-  });
+      BrowseSubjects.clickNextPaginationButton();
+      BrowseSubjects.checkResultAndItsRow(5, `${testData.testValue}would be here`);
+    },
+  );
 });
