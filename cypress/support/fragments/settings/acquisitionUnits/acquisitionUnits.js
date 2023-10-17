@@ -1,4 +1,12 @@
-import { Button, TextField, MultiColumnListCell, Checkbox, Modal, Pane, Section } from '../../../../../interactors';
+import {
+  Button,
+  TextField,
+  MultiColumnListCell,
+  Checkbox,
+  Modal,
+  Pane,
+  Section,
+} from '../../../../../interactors';
 import getRandomPostfix from '../../../utils/stringTools';
 
 const auListPane = Pane({ id: 'pane-ac-units-list' });
@@ -18,12 +26,11 @@ const searchButton = Button('Search');
 const nameTextField = TextField({ name: 'name' });
 
 export default {
-
-  defaultAcquisitionUnit : {
+  defaultAcquisitionUnit: {
     name: `AU_${getRandomPostfix()}`,
   },
 
-  waitLoading : () => {
+  waitLoading: () => {
     cy.expect(auListPane.exists());
   },
 
@@ -32,20 +39,13 @@ export default {
   },
 
   fillInInfo(name) {
-    cy.do([
-      nameTextField.fillIn(name),
-      viewCheckbox.click(),
-      saveAUButton.click(),
-    ]);
+    cy.do([nameTextField.fillIn(name), viewCheckbox.click(), saveAUButton.click()]);
     this.assignAdmin();
+    cy.wait(4000);
   },
 
   fillInAUInfo: (name) => {
-    cy.do([
-      nameTextField.fillIn(name),
-      viewCheckbox.click(),
-      saveAUButton.click(),
-    ]);
+    cy.do([nameTextField.fillIn(name), viewCheckbox.click(), saveAUButton.click()]);
     // need to wait,while page will be loaded after save
     cy.wait(6000);
   },
@@ -55,8 +55,11 @@ export default {
       findUserButton.click(),
       userSearchModal.find(searchTextField).fillIn(userName),
       searchButton.click(),
+    ]);
+    cy.wait(4000);
+    cy.do([
       userSearchModal.find(firstSearchResult).find(checkboxAll).click(),
-      userSearchModal.find(saveButton).click()
+      userSearchModal.find(saveButton).click(),
     ]);
   },
 
@@ -66,21 +69,27 @@ export default {
       userSearchModal.find(searchTextField).fillIn('diku'),
       searchButton.click(),
       firstSearchResult.find(checkboxAll).click(),
-      userSearchModal.find(saveButton).click()
+      userSearchModal.find(saveButton).click(),
     ]);
   },
 
   unAssignUser: (AUName) => {
     cy.do([
       auListPane.find(Button(AUName)).click(),
-      assignedUsersSection.find(MultiColumnListCell({ row: 1, columnIndex: 2 })).find(trashButton).click()
+      assignedUsersSection
+        .find(MultiColumnListCell({ row: 1, columnIndex: 2 }))
+        .find(trashButton)
+        .click(),
     ]);
   },
 
   unAssignAdmin: (AUName) => {
     cy.do([
       auListPane.find(Button(AUName)).click(),
-      assignedUsersSection.find(MultiColumnListCell({ row: 0, columnIndex: 2 })).find(trashButton).click()
+      assignedUsersSection
+        .find(MultiColumnListCell({ row: 0, columnIndex: 2 }))
+        .find(trashButton)
+        .click(),
     ]);
   },
 
@@ -89,7 +98,7 @@ export default {
       auListPane.find(Button(AUName)).click(),
       actionsButton.click(),
       Button('Delete').click(),
-      Button('Confirm').click()
+      Button('Confirm').click(),
     ]);
   },
 
@@ -104,12 +113,30 @@ export default {
     cy.do(Button('Edit').click());
   },
 
+  editAU: () => {
+    cy.wait(5000);
+    cy.do(actionsButton.click());
+    // //Need to wait,while wright link of Edit button will be loaded
+    cy.wait(5000);
+    cy.do(Button('Edit').click());
+  },
+
+  selectAU: (AUName) => {
+    cy.do(auListPane.find(Button(AUName)).click());
+    cy.expect(auPaneDetails.find(assignedUsersSection).exists());
+    // //Need to wait,while data of Acquisition Unit will be loaded
+    cy.wait(5000);
+  },
+
   selectViewCheckbox: () => {
     cy.expect(assignedUsersSection.exists());
-    cy.do([
-      viewCheckbox.click(),
-      saveAUButton.click(),
-    ]);
+    cy.do([viewCheckbox.click(), saveAUButton.click()]);
+    cy.expect(auPaneDetails.find(assignedUsersSection).exists());
+  },
+
+  selectEditCheckbox: () => {
+    cy.expect(assignedUsersSection.exists());
+    cy.do([Checkbox('Edit').click(), saveAUButton.click()]);
     cy.expect(auPaneDetails.find(assignedUsersSection).exists());
   },
 };

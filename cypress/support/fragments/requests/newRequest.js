@@ -1,5 +1,21 @@
 /* eslint-disable cypress/no-unnecessary-waiting */
-import { Accordion, Button, Checkbox, HTML, MultiColumnListCell, Pane, Section, Select, Spinner, TextArea, TextField, including } from '../../../../interactors';
+import {
+  Accordion,
+  Button,
+  Checkbox,
+  HTML,
+  MultiColumnListCell,
+  Pane,
+  Link,
+  Section,
+  Select,
+  Spinner,
+  TextArea,
+  TextField,
+  Option,
+  including,
+  Modal,
+} from '../../../../interactors';
 import { ITEM_STATUS_NAMES, REQUEST_TYPES } from '../../constants';
 import dateTools from '../../utils/dateTools';
 import InteractorsTools from '../../utils/interactorsTools';
@@ -17,6 +33,13 @@ const selectServicePoint = Select({ name: 'pickupServicePointId' });
 const selectRequestType = Select({ name: 'requestType' });
 const titleLevelRequest = Checkbox({ name: 'createTitleLevelRequest' });
 const selectItemPane = Pane({ id: 'items-dialog-instance-items-list' });
+const requestInfoSection = Section({ id: 'new-requester-info' });
+const title = 'Title';
+const tlRequest = 'Title level requests';
+const contributors = 'Contributor';
+const PublicationDate = 'Publication date';
+const edition = 'Edition';
+const isbn = 'ISBN(s)';
 
 function addRequester(userName) {
   cy.do(Button({ id: 'requestform-addrequest' }).click());
@@ -25,15 +48,14 @@ function addRequester(userName) {
 }
 
 function openNewRequestPane() {
-  cy.do([
-    actionsButton.click(),
-    newRequestButton.click()
-  ]);
+  cy.do([actionsButton.click(), newRequestButton.click()]);
 }
 
 function printPickSlips() {
   cy.do([actionsButton.click(), Button({ id: 'printPickSlipsBtn' }).click()]);
-  InteractorsTools.checkCalloutMessage('Print options loading in progress. It might take a few seconds, please be patient.');
+  InteractorsTools.checkCalloutMessage(
+    'Print options loading in progress. It might take a few seconds, please be patient.',
+  );
 }
 
 export default {
@@ -53,13 +75,13 @@ export default {
       cy.intercept('/circulation/loans?*').as('getLoans');
       cy.do(enterItemBarcodeButton.click());
     }
-    cy.do(selectRequestType.choose(newRequest.requestType));
     cy.wait('@getLoans');
     cy.do(requesterBarcodeInput.fillIn(newRequest.requesterBarcode));
     cy.intercept('/proxiesfor?*').as('getUsers');
     cy.do(enterRequesterBarcodeButton.click());
     cy.expect(selectServicePoint.exists);
     cy.wait('@getUsers');
+    cy.do(selectRequestType.choose(newRequest.requestType));
   },
 
   choosepickupServicePoint(pickupServicePoint) {
@@ -100,12 +122,15 @@ export default {
     // need to wait until instanceId is uploaded
     cy.wait(2500);
     this.choosepickupServicePoint(newRequest.pickupServicePoint);
+    // need to wait for loading dropdown options
+    cy.wait(1000);
+    this.chooseRequestType(REQUEST_TYPES.PAGE);
     this.saveRequestAndClose();
     this.waitLoading();
   },
 
   enableTitleLevelRequest() {
-    //need to synchronize actions before click
+    // need to synchronize actions before click
     cy.wait(3000);
     cy.do(titleLevelRequest.click());
   },
@@ -116,15 +141,22 @@ export default {
     cy.expect([
       Accordion('Item information').exists(),
       Accordion('Request information').exists(),
-      Accordion('Requester information').exists()
+      Accordion('Requester information').exists(),
+    ]);
+  },
+
+  waitLoadingNewTitleRequestPage(TLR = false) {
+    cy.expect(Pane({ title: 'New request' }).exists());
+    if (TLR) cy.expect(titleLevelRequest.exists());
+    cy.expect([
+      Accordion('Title information').exists(),
+      Accordion('Request information').exists(),
+      Accordion('Requester information').exists(),
     ]);
   },
 
   enterItemInfo(barcode) {
-    cy.do([
-      itemBarcodeInput.fillIn(barcode),
-      enterItemBarcodeButton.click()
-    ]);
+    cy.do([itemBarcodeInput.fillIn(barcode), enterItemBarcodeButton.click()]);
   },
 
   enterHridInfo(hrid) {
@@ -145,7 +177,19 @@ export default {
   },
 
   verifyItemInformation: (allContentToCheck) => {
-    return allContentToCheck.forEach(contentToCheck => cy.expect(Section({ id: 'new-item-info' }, including(contentToCheck)).exists()));
+    return allContentToCheck.forEach((contentToCheck) => cy.expect(Section({ id: 'new-item-info' }, including(contentToCheck)).exists()));
+  },
+
+  verifyTitleInformation() {
+    this.verifyItemInformation([
+      tlRequest,
+      title,
+      contributors,
+      PublicationDate,
+      edition,
+      isbn,
+      PublicationDate,
+    ]);
   },
 
   chooseItemInSelectItemPane: (itemBarcode) => {
@@ -154,7 +198,7 @@ export default {
   },
 
   verifyHridInformation: (allContentToCheck) => {
-    return allContentToCheck.forEach(contentToCheck => cy.expect(Section({ id: 'section-instance-info' }, including(contentToCheck)).exists()));
+    return allContentToCheck.forEach((contentToCheck) => cy.expect(HTML({ id: 'section-instance-info' }, including(contentToCheck)).exists()));
   },
 
   verifyRequestInformation: (itemStatus) => {
@@ -169,11 +213,19 @@ export default {
     ]);
   },
 
-  enterRequestAndPatron: (patron) => {
-    cy.do([TextField({ id: 'requestExpirationDate' }).fillIn(dateTools.getCurrentDate()),
-    TextArea({ id: 'patronComments' }).fillIn(patron),
-    Checkbox({ name: 'createTitleLevelRequest' }).click()])
-    cy.expect(Spinner().absent())
+  verifyRequesterInformation: (userName, userBarcode, patronGroupName) => {
+    cy.expect(requestInfoSection.find(Link(including(userName))).exists());
+    cy.expect(requestInfoSection.find(Link(including(userBarcode))).exists());
+    cy.expect(requestInfoSection.find(HTML(patronGroupName)).exists());
+  },
+
+  enterRequestAndPatron(patron) {
+    cy.do([
+      TextField({ id: 'requestExpirationDate' }).fillIn(dateTools.getCurrentDate()),
+      TextArea({ id: 'patronComments' }).fillIn(patron),
+    ]);
+    this.enableTitleLevelRequest();
+    cy.expect(Spinner().absent());
   },
 
   chooseRequestType(requestType) {
@@ -187,5 +239,54 @@ export default {
     cy.expect(selectServicePoint.exists());
     cy.wait('@getUsers');
     this.choosepickupServicePoint(newRequest.pickupServicePoint);
-  }
+  },
+
+  enterRequesterBarcode: (requesterBarcode) => {
+    cy.do(requesterBarcodeInput.fillIn(requesterBarcode));
+    cy.do(enterRequesterBarcodeButton.click());
+    // wait until requestType select become enabled
+    cy.wait(2000);
+    // check is requestType select 'enabled', if 'disabled' - click [Enter] button for [Requester barcode] again
+    cy.get('[name="requestType"]')
+      .invoke('is', ':enabled')
+      .then((state) => {
+        cy.log(state);
+        if (!state) {
+          cy.do(enterRequesterBarcodeButton.click());
+        }
+      });
+  },
+
+  verifyFulfillmentPreference: (preference) => {
+    cy.expect(
+      Select({ name: 'fulfillmentPreference' }, including(Option({ value: preference }))).exists(),
+    );
+  },
+
+  enterRequesterInfoWithRequestType(newRequest, requestType = REQUEST_TYPES.PAGE) {
+    cy.do(requesterBarcodeInput.fillIn(newRequest.requesterBarcode));
+    cy.intercept('/proxiesfor?*').as('getUsers');
+    cy.wait(2000);
+    cy.do(enterRequesterBarcodeButton.click());
+    cy.wait(1000);
+    this.chooseRequestType(requestType);
+    cy.expect(selectServicePoint.exists());
+    cy.wait('@getUsers');
+    this.choosepickupServicePoint(newRequest.pickupServicePoint);
+  },
+
+  checkRequestIsNotAllowedModal() {
+    cy.expect(
+      Modal('Request not allowed').has({
+        message: 'This requester already has an open request for this item',
+      }),
+    );
+  },
+  checkRequestIsNotAllowedInstanceModal() {
+    cy.expect(
+      Modal('Request not allowed').has({
+        message: 'This requester already has an open request for this instance',
+      }),
+    );
+  },
 };

@@ -20,12 +20,18 @@ describe('bulk-edit', () => {
       cy.createTempUser([
         permissions.bulkEditCsvView.gui,
         permissions.bulkEditCsvEdit.gui,
-      ])
-        .then(userProperties => {
-          user = userProperties;
-          cy.login(user.username, user.password, { path: TopMenu.bulkEditPath, waiter: BulkEditSearchPane.waitLoading });
-          FileManager.createFile(`cypress/fixtures/${userUUIDsFileName}`, `${user.userId}\r\n${invalidUserUUID}`);
+        permissions.uiUserEdit.gui,
+      ]).then((userProperties) => {
+        user = userProperties;
+        cy.login(user.username, user.password, {
+          path: TopMenu.bulkEditPath,
+          waiter: BulkEditSearchPane.waitLoading,
         });
+        FileManager.createFile(
+          `cypress/fixtures/${userUUIDsFileName}`,
+          `${user.userId}\r\n${invalidUserUUID}`,
+        );
+      });
     });
 
     after('delete test data', () => {
@@ -35,49 +41,61 @@ describe('bulk-edit', () => {
       Users.deleteViaApi(user.userId);
     });
 
-    afterEach('reload bulk-edit page', () => {
+    beforeEach('go to bulk-edit page', () => {
       cy.visit(TopMenu.bulkEditPath);
+      BulkEditSearchPane.checkUsersRadio();
+      BulkEditSearchPane.selectRecordIdentifier('User UUIDs');
     });
 
-    it('C353233 Verify number of updated records (firebird)', { tags: [testTypes.smoke, devTeams.firebird] }, () => {
-      BulkEditSearchPane.selectRecordIdentifier('User UUIDs');
+    it(
+      'C353233 Verify number of updated records (firebird)',
+      { tags: [testTypes.smoke, devTeams.firebird] },
+      () => {
+        // Upload file
+        BulkEditSearchPane.uploadFile(userUUIDsFileName);
+        BulkEditSearchPane.waitFileUploading();
 
-      // Upload file
-      BulkEditSearchPane.uploadFile(userUUIDsFileName);
-      BulkEditSearchPane.waitFileUploading();
+        // Prepare file for bulk edit
+        const newName = `testName_${getRandomPostfix()}`;
+        BulkEditActions.downloadMatchedResults();
+        BulkEditActions.prepareValidBulkEditFile(
+          matchedRecordsFileName,
+          editedFileName,
+          'testPermFirst',
+          newName,
+        );
 
-      // Prepare file for bulk edit
-      const newName = `testName_${getRandomPostfix()}`;
-      BulkEditActions.downloadMatchedResults();
-      BulkEditActions.prepareValidBulkEditFile(matchedRecordsFileName, editedFileName, 'testPermFirst', newName);
+        // Upload bulk edit file
+        BulkEditActions.openStartBulkEditForm();
+        BulkEditSearchPane.uploadFile(editedFileName);
+        BulkEditSearchPane.waitFileUploading();
+        BulkEditActions.clickNext();
+        BulkEditActions.commitChanges();
 
-      // Upload bulk edit file
-      BulkEditActions.openStartBulkEditForm();
-      BulkEditSearchPane.uploadFile(editedFileName);
-      BulkEditSearchPane.waitFileUploading();
-      BulkEditActions.clickNext();
-      BulkEditActions.commitChanges();
+        // Verify changes
+        BulkEditSearchPane.verifyChangedResults(newName);
+      },
+    );
 
-      // Verify changes
-      BulkEditSearchPane.verifyChangedResults(newName);
-    });
+    it(
+      'C357034 Verify elements of the bulk edit app -- Local app (firebird)',
+      { tags: [testTypes.smoke, devTeams.firebird] },
+      () => {
+        BulkEditSearchPane.clickToBulkEditMainButton();
+        BulkEditSearchPane.verifyDefaultFilterState();
 
-    it('C357034 Verify elements of the bulk edit app -- CSV app (firebird)', { tags: [testTypes.smoke, devTeams.firebird] }, () => {
-      BulkEditSearchPane.selectRecordIdentifier('User UUIDs');
+        BulkEditSearchPane.checkUsersRadio();
+        BulkEditSearchPane.selectRecordIdentifier('User UUIDs');
 
-      BulkEditSearchPane.clickToBulkEditMainButton();
-      BulkEditSearchPane.verifyDefaultFilterState();
+        BulkEditSearchPane.uploadFile(userUUIDsFileName);
+        BulkEditSearchPane.waitFileUploading();
 
-      BulkEditSearchPane.selectRecordIdentifier('User UUIDs');
+        BulkEditSearchPane.verifyMatchedResults(user.username);
+        BulkEditSearchPane.verifyNonMatchedResults(invalidUserUUID);
 
-      BulkEditSearchPane.uploadFile(userUUIDsFileName);
-      BulkEditSearchPane.waitFileUploading();
-
-      BulkEditSearchPane.verifyMatchedResults(user.username);
-      BulkEditSearchPane.verifyNonMatchedResults(invalidUserUUID);
-
-      BulkEditSearchPane.clickToBulkEditMainButton();
-      BulkEditSearchPane.verifyDefaultFilterState();
-    });
+        BulkEditSearchPane.clickToBulkEditMainButton();
+        BulkEditSearchPane.verifyDefaultFilterState();
+      },
+    );
   });
 });

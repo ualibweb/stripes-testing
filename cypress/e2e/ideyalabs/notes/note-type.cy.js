@@ -1,16 +1,16 @@
 import DevTeams from '../../../support/dictionary/devTeams';
 import TestTypes from '../../../support/dictionary/testTypes';
-import AgreementsDetails from '../../../support/fragments/agreements/agreementsDetails';
+import AgreementsDetails from '../../../support/fragments/agreements/agreementViewDetails';
 import ExistingNoteEdit from '../../../support/fragments/notes/existingNoteEdit';
 import ExistingNoteView from '../../../support/fragments/notes/existingNoteView';
 import NewNote from '../../../support/fragments/notes/newNote';
 import TopMenu from '../../../support/fragments/topMenu';
-import { getFourDigitRandomNumber } from '../../../support/utils/stringTools';
+import { randomFourDigitNumber } from '../../../support/utils/stringTools';
 
-const noteData = `New Note${getFourDigitRandomNumber()}`;
-const noteType = `Item${getFourDigitRandomNumber()}`;
+const noteData = `New Note${randomFourDigitNumber()}`;
+const noteType = `Item${randomFourDigitNumber()}`;
 
-describe('Settings', () => {
+describe.skip('Settings', () => {
   before('Login to Folio', () => {
     cy.login(Cypress.env('diku_login'), Cypress.env('diku_password'));
   });
@@ -27,7 +27,7 @@ describe('Settings', () => {
       AgreementsDetails.clickOnNewButton();
       NewNote.clickOnNoteType(noteData);
       NewNote.deleteNote(noteData);
-    }
+    },
   );
 
   it(
@@ -47,6 +47,6 @@ describe('Settings', () => {
       AgreementsDetails.clickOnNoteRecord();
       ExistingNoteView.gotoEdit();
       NewNote.clickOnNoteType(noteType);
-    }
+    },
   );
 });

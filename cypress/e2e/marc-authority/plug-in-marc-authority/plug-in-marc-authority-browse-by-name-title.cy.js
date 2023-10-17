@@ -11,37 +11,39 @@ import JobProfiles from '../../../support/fragments/data_import/job_profiles/job
 import getRandomPostfix from '../../../support/utils/stringTools';
 import MarcAuthority from '../../../support/fragments/marcAuthority/marcAuthority';
 import MarcAuthorities from '../../../support/fragments/marcAuthority/marcAuthorities';
+import Parallelization from '../../../support/dictionary/parallelization';
 
 describe('plug-in MARC authority | Browse', () => {
-    const testData = {
-      searchOptionA: 'Name-title',
-      searchOptionB: 'Personal name',
-      typeOfHeadingA: 'Personal Name',
-      typeOfHeadingB: 'Corporate Name',
-      typeOfHeadingC: 'Conference Name',
-      value: 'Dabbāgh, ʻAbd al-Raḥmān ibn Muḥammad, 1208 or 1209-1299 or 1300. Mashāriq anwār al-qulūb wa-mafātiḥ asrār al-ghuyūb',
-      valueMarked: 'Dabbāgh, ʻAbd al-Raḥmān ibn Muḥammad,',
-      valueForNewSearch: 'United States. Truth in Lending Act',
-      authorized: 'Authorized',
-      reference: 'Reference',
-    };
-    
-    const marcFiles = [
-      {
-        marc: 'oneMarcBib.mrc', 
-        fileName: `testMarcFile.${getRandomPostfix()}.mrc`, 
-        jobProfileToRun: 'Default - Create instance and SRS MARC Bib',
-        numOfRecords: 1,
-      }, 
-      {
-        marc: 'mrcFileForC380554.mrc', 
-        fileName: `testMarcFile.${getRandomPostfix()}.mrc`,
-        jobProfileToRun: 'Default - Create SRS MARC Authority',
-        numOfRecords: 3,
-      },
-    ]
+  const testData = {
+    searchOptionA: 'Name-title',
+    searchOptionB: 'Personal name',
+    typeOfHeadingA: 'Personal Name',
+    typeOfHeadingB: 'Corporate Name',
+    typeOfHeadingC: 'Conference Name',
+    value:
+      'Dabbāgh, ʻAbd al-Raḥmān ibn Muḥammad, 1208 or 1209-1299 or 1300. Mashāriq anwār al-qulūb wa-mafātiḥ asrār al-ghuyūb',
+    valueMarked: 'Dabbāgh, ʻAbd al-Raḥmān ibn Muḥammad,',
+    valueForNewSearch: 'United States. Truth in Lending Act',
+    authorized: 'Authorized',
+    reference: 'Reference',
+  };
 
-    let createdAuthorityIDs = [];
+  const marcFiles = [
+    {
+      marc: 'oneMarcBib.mrc',
+      fileName: `testMarcFile.${getRandomPostfix()}.mrc`,
+      jobProfileToRun: 'Default - Create instance and SRS MARC Bib',
+      numOfRecords: 1,
+    },
+    {
+      marc: 'marcFileForC380554.mrc',
+      fileName: `testMarcFile.${getRandomPostfix()}.mrc`,
+      jobProfileToRun: 'Default - Create SRS MARC Authority',
+      numOfRecords: 3,
+    },
+  ];
+
+  const createdAuthorityIDs = [];
 
   before('Creating user', () => {
     cy.createTempUser([
@@ -50,30 +52,35 @@ describe('plug-in MARC authority | Browse', () => {
       Permissions.uiQuickMarcQuickMarcAuthoritiesEditorAll.gui,
       Permissions.uiQuickMarcQuickMarcBibliographicEditorAll.gui,
       Permissions.uiQuickMarcQuickMarcAuthorityLinkUnlink.gui,
-    ]).then(createdUserProperties => {
+    ]).then((createdUserProperties) => {
       testData.userProperties = createdUserProperties;
 
-      marcFiles.forEach(marcFile => {
-        cy.loginAsAdmin({ path: TopMenu.dataImportPath, waiter: DataImport.waitLoading }).then(() => {
-          DataImport.uploadFile(marcFile.marc, marcFile.fileName);
-          JobProfiles.waitLoadingList();
-          JobProfiles.searchJobProfileForImport(marcFile.jobProfileToRun);
-          JobProfiles.runImportFile();
-          JobProfiles.waitFileIsImported(marcFile.fileName);
-          Logs.checkStatusOfJobProfile('Completed');
-          Logs.openFileDetails(marcFile.fileName);
-          for (let i = 0; i < marcFile.numOfRecords; i++) {
-            Logs.getCreatedItemsID(i).then(link => {
-              createdAuthorityIDs.push(link.split('/')[5]);
-            });
-          }
-        });
+      marcFiles.forEach((marcFile) => {
+        cy.loginAsAdmin({ path: TopMenu.dataImportPath, waiter: DataImport.waitLoading }).then(
+          () => {
+            DataImport.uploadFile(marcFile.marc, marcFile.fileName);
+            JobProfiles.waitLoadingList();
+            JobProfiles.search(marcFile.jobProfileToRun);
+            JobProfiles.runImportFile();
+            JobProfiles.waitFileIsImported(marcFile.fileName);
+            Logs.checkStatusOfJobProfile('Completed');
+            Logs.openFileDetails(marcFile.fileName);
+            for (let i = 0; i < marcFile.numOfRecords; i++) {
+              Logs.getCreatedItemsID(i).then((link) => {
+                createdAuthorityIDs.push(link.split('/')[5]);
+              });
+            }
+          },
+        );
       });
     });
   });
 
   beforeEach('Login to the application', () => {
-    cy.login(testData.userProperties.username, testData.userProperties.password, { path: TopMenu.inventoryPath, waiter: InventoryInstances.waitContentLoading });
+    cy.login(testData.userProperties.username, testData.userProperties.password, {
+      path: TopMenu.inventoryPath,
+      waiter: InventoryInstances.waitContentLoading,
+    });
   });
 
   after('Deleting created user', () => {
@@ -82,28 +89,36 @@ describe('plug-in MARC authority | Browse', () => {
     createdAuthorityIDs.forEach((id, index) => {
       if (index) MarcAuthority.deleteViaAPI(id);
     });
-
-    cy.loginAsAdmin({ path: TopMenu.dataImportPath, waiter: DataImport.waitLoading });
-    DataImport.selectLog();
-    DataImport.openDeleteImportLogsModal();
-    DataImport.confirmDeleteImportLogs();
   });
 
-  it('C380554 MARC Authority plug-in | Browse using "Name-title" option returns only records with the same "Type of heading" (spitfire)', { tags: [TestTypes.criticalPath, DevTeams.spitfire] }, () => {
-    InventoryInstance.searchByTitle(createdAuthorityIDs[0]);
-    InventoryInstances.selectInstance();
-    InventoryInstance.editMarcBibliographicRecord();
-    InventoryInstance.verifyAndClickLinkIcon('700');
-    MarcAuthorities.searchByParameter(testData.searchOptionA, testData.value);
-    // wait for the results to be loaded.
-    cy.wait(1000);
-    MarcAuthorities.checkAuthorizedReferenceColumn(testData.authorized, testData.reference);
-    MarcAuthorities.checkHeadingType(testData.authorized, testData.typeOfHeadingA, testData.typeOfHeadingB, testData.typeOfHeadingC);
-    MarcAuthorities.checkRow(testData.value);
-    MarcAuthorities.selectTitle(testData.value);
-    MarcAuthorities.checkRecordDetailPageMarkedValue(testData.valueMarked);
-    MarcAuthorities.chooseTypeOfHeadingAndCheck(testData.typeOfHeadingA, testData.typeOfHeadingB, testData.typeOfHeadingA);
-    MarcAuthorities.searchBy(testData.searchOptionB, testData.valueForNewSearch);
-    MarcAuthorities.checkSingleHeadingType(testData.authorized, testData.typeOfHeadingA);
-  });
+  it(
+    'C380554 MARC Authority plug-in | Browse using "Name-title" option returns only records with the same "Type of heading" (spitfire)',
+    { tags: [TestTypes.criticalPath, DevTeams.spitfire, Parallelization.nonParallel] },
+    () => {
+      InventoryInstance.searchByTitle(createdAuthorityIDs[0]);
+      InventoryInstances.selectInstance();
+      InventoryInstance.editMarcBibliographicRecord();
+      InventoryInstance.verifyAndClickLinkIcon('700');
+      MarcAuthorities.searchByParameter(testData.searchOptionA, testData.value);
+      // wait for the results to be loaded.
+      cy.wait(1000);
+      MarcAuthorities.checkAuthorizedReferenceColumn(testData.authorized, testData.reference);
+      MarcAuthorities.checkHeadingType(
+        testData.authorized,
+        testData.typeOfHeadingA,
+        testData.typeOfHeadingB,
+        testData.typeOfHeadingC,
+      );
+      MarcAuthorities.checkRow(testData.value);
+      MarcAuthorities.selectTitle(testData.value);
+      MarcAuthorities.checkRecordDetailPageMarkedValue(testData.valueMarked);
+      MarcAuthorities.chooseTypeOfHeadingAndCheck(
+        testData.typeOfHeadingA,
+        testData.typeOfHeadingB,
+        testData.typeOfHeadingA,
+      );
+      MarcAuthorities.searchBy(testData.searchOptionB, testData.valueForNewSearch);
+      MarcAuthorities.checkSingleHeadingType(testData.authorized, testData.typeOfHeadingA);
+    },
+  );
 });

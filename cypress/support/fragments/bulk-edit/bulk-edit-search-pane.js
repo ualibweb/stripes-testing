@@ -13,7 +13,7 @@ import {
   Pane,
   including,
   MultiColumnListRow,
-  TextField
+  TextField,
 } from '../../../../interactors';
 import { ListRow } from '../../../../interactors/multi-column-list';
 
@@ -27,7 +27,6 @@ const errorsAccordion = Accordion('Errors');
 const recordIdentifierDropdown = Select('Record identifier');
 const recordTypesAccordion = Accordion({ label: 'Record types' });
 const actions = Button('Actions');
-const radioItems = RadioButton('Inventory - items');
 const fileButton = Button('or choose file');
 const bulkEditPane = Pane(including('Bulk edit'));
 const usersRadio = RadioButton('Users');
@@ -46,15 +45,20 @@ const logsStatusesAccordion = Accordion('Statuses');
 const textFildTo = TextField('To');
 const textFildFrom = TextField('From');
 const triggerBtn = DropdownMenu().find(Button('File that was used to trigger the bulk edit'));
-const errorsEncounteredBtn = DropdownMenu().find(Button('File with errors encountered during the record matching'));
+const errorsEncounteredBtn = DropdownMenu().find(
+  Button('File with errors encountered during the record matching'),
+);
 const matchingRecordsBtn = DropdownMenu().find(Button('File with the matching records'));
-const previewPorposedChangesBtn = DropdownMenu().find(Button('File with the preview of proposed changes'));
+const previewPorposedChangesBtn = DropdownMenu().find(
+  Button('File with the preview of proposed changes'),
+);
 const updatedRecordBtn = DropdownMenu().find(Button('File with updated records'));
-const errorsCommittingBtn = DropdownMenu().find(Button('File with errors encountered when committing the changes'));
+const errorsCommittingBtn = DropdownMenu().find(
+  Button('File with errors encountered when committing the changes'),
+);
 const buildQueryButton = Button('Build query');
 const buildQueryModal = Modal('Build query');
 const logsActionButton = Button({ icon: 'ellipsis' });
-const startBulkEditLocalButton = Button('Start bulk edit (Local)');
 
 export default {
   waitLoading() {
@@ -62,7 +66,7 @@ export default {
   },
 
   verifyNoPermissionWarning() {
-    cy.expect(HTML('You don\'t have permission to view this app/record').exists());
+    cy.expect(HTML("You don't have permission to view this app/record").exists());
   },
 
   searchBtnIsDisabled(isDisabled) {
@@ -86,39 +90,42 @@ export default {
   },
 
   verifyPanesBeforeImport() {
-    cy.expect([
-      setCriteriaPane.exists(),
-      bulkEditPane.exists(),
-    ]);
+    cy.expect([setCriteriaPane.exists(), bulkEditPane.exists()]);
   },
 
   verifyBulkEditPaneItems() {
     cy.expect([
       bulkEditPane.find(HTML('Set criteria to start bulk edit')).exists(),
-      bulkEditPane.find(HTML('Select a "record identifier" when on the Identifier tab. Enter a "search query" when on the Query tab')).exists(),
+      bulkEditPane
+        .find(
+          HTML(
+            'Select a "record identifier" when on the Identifier tab. Enter a "search query" when on the Query tab',
+          ),
+        )
+        .exists(),
     ]);
   },
 
   verifySetCriteriaPaneItems() {
     cy.expect([
       setCriteriaPane.find(identifierToggle).exists(),
-      setCriteriaPane.find(queryToggle).exists(),
+      setCriteriaPane.find(queryToggle).absent(),
       setCriteriaPane.find(logsToggle).exists(),
       setCriteriaPane.find(recordIdentifierDropdown).exists(),
       setCriteriaPane.find(recordTypesAccordion).has({ open: true }),
       setCriteriaPane.find(HTML('Drag and drop')).exists(),
-      fileButton.has({ disabled: true })
+      fileButton.has({ disabled: true }),
     ]);
   },
 
   verifySetCriteriaPaneSpecificTabs(...tabs) {
-    tabs.forEach(tab => {
+    tabs.forEach((tab) => {
       cy.expect(setCriteriaPane.find(Button(`${tab}`)).exists());
     });
   },
 
   verifySetCriteriaPaneSpecificTabsHidden(...tabs) {
-    tabs.forEach(tab => {
+    tabs.forEach((tab) => {
       cy.expect(setCriteriaPane.find(Button(`${tab}`)).absent());
     });
   },
@@ -135,6 +142,14 @@ export default {
     ]);
   },
 
+  verifyRecordIdentifierEmpty() {
+    cy.expect(recordIdentifierDropdown.find(HTML('')).exists());
+  },
+
+  verifyRecordTypesEmpty() {
+    cy.expect([recordTypesAccordion.find(HTML('')).exists()]);
+  },
+
   verifyRecordIdentifierItems() {
     this.checkUsersRadio();
     cy.expect([
@@ -144,7 +159,13 @@ export default {
       recordIdentifierDropdown.find(HTML('User Barcodes')).exists(),
       recordIdentifierDropdown.find(HTML('External IDs')).exists(),
       recordIdentifierDropdown.find(HTML('Usernames')).exists(),
-      bulkEditPane.find(HTML('Select a "record identifier" when on the Identifier tab. Enter a "search query" when on the Query tab')).exists(),
+      bulkEditPane
+        .find(
+          HTML(
+            'Select a "record identifier" when on the Identifier tab. Enter a "search query" when on the Query tab',
+          ),
+        )
+        .exists(),
     ]);
   },
 
@@ -157,7 +178,13 @@ export default {
       recordIdentifierDropdown.find(HTML('Holdings HRIDs')).exists(),
       recordIdentifierDropdown.find(HTML('Instance HRIDs')).exists(),
       recordIdentifierDropdown.find(HTML('Item barcodes')).exists(),
-      bulkEditPane.find(HTML('Select a "record identifier" when on the Identifier tab. Enter a "search query" when on the Query tab')).exists(),
+      bulkEditPane
+        .find(
+          HTML(
+            'Select a "record identifier" when on the Identifier tab. Enter a "search query" when on the Query tab',
+          ),
+        )
+        .exists(),
     ]);
   },
 
@@ -184,7 +211,13 @@ export default {
       recordIdentifierDropdown.find(HTML('Item former identifier')).exists(),
       recordIdentifierDropdown.find(HTML('Item accession number')).exists(),
       recordIdentifierDropdown.find(HTML('Holdings UUIDs')).exists(),
-      bulkEditPane.find(HTML('Select a "record identifier" when on the Identifier tab. Enter a "search query" when on the Query tab')).exists(),
+      bulkEditPane
+        .find(
+          HTML(
+            'Select a "record identifier" when on the Identifier tab. Enter a "search query" when on the Query tab',
+          ),
+        )
+        .exists(),
     ]);
   },
 
@@ -349,8 +382,11 @@ export default {
       recordTypesAccordion.find(holdingsRadio).exists(),
       setCriteriaPane.find(buildQueryButton).has({ disabled: false }),
     ]);
-    selectedRadio === 'Items' ? this.isItemsRadioChecked()
-      : selectedRadio === 'Holdings' ? this.isHoldingsRadioChecked()
+    // eslint-disable-next-line no-unused-expressions
+    selectedRadio === 'Items'
+      ? this.isItemsRadioChecked()
+      : selectedRadio === 'Holdings'
+        ? this.isHoldingsRadioChecked()
         : this.isUsersRadioChecked();
     this.verifyBulkEditPaneItems();
   },
@@ -380,16 +416,19 @@ export default {
 
   verifyCsvViewPermission() {
     cy.expect([
-      radioItems.has({ disabled: true }),
+      usersRadio.absent(),
+      itemsRadio.absent(),
+      holdingsRadio.absent(),
       recordIdentifierDropdown.has({ disabled: true }),
       fileButton.has({ disabled: true }),
-      actions.absent()
+      actions.absent(),
     ]);
   },
 
   verifyUsersUpdatePermission() {
     cy.expect([
-      radioItems.has({ disabled: true }),
+      itemsRadio.absent(),
+      holdingsRadio.absent(),
       recordIdentifierDropdown.has({ disabled: false }),
       fileButton.has({ disabled: true }),
       actions.absent(),
@@ -398,10 +437,12 @@ export default {
 
   verifyInAppViewPermission() {
     cy.expect([
-      radioItems.has({ disabled: false }),
+      usersRadio.absent(),
+      itemsRadio.absent(),
+      holdingsRadio.absent(),
       recordIdentifierDropdown.has({ disabled: true }),
       fileButton.has({ disabled: true }),
-      actions.absent()
+      actions.absent(),
     ]);
   },
 
@@ -418,10 +459,7 @@ export default {
   },
 
   verifyDefaultFilterState() {
-    cy.expect([
-      fileButton.has({ disabled: true }),
-      HTML('Select record identifier').exists()
-    ]);
+    cy.expect([fileButton.has({ disabled: true }), HTML('Select record identifier').exists()]);
     this.verifyBulkEditPaneItems();
   },
 
@@ -437,8 +475,8 @@ export default {
     cy.expect(usersRadio.has({ disabled: isDisabled }));
   },
 
-  isUsersRadioChecked() {
-    cy.expect(usersRadio.has({ checked: true }));
+  isUsersRadioChecked(checked = true) {
+    cy.expect(usersRadio.has({ checked }));
   },
 
   checkItemsRadio() {
@@ -449,8 +487,8 @@ export default {
     cy.expect(itemsRadio.has({ disabled: isDisabled }));
   },
 
-  isItemsRadioChecked() {
-    cy.expect(itemsRadio.has({ checked: true }));
+  isItemsRadioChecked(checked = true) {
+    cy.expect(itemsRadio.has({ checked }));
   },
 
   checkHoldingsRadio() {
@@ -469,12 +507,16 @@ export default {
     cy.do(usersCheckbox.click());
   },
 
-  itemsHoldingsIsDisabled(isDisabled) {
+  holdingsRadioIsDisabled(isDisabled) {
     cy.expect(holdingsRadio.has({ disabled: isDisabled }));
   },
 
-  isHoldingsRadioChecked() {
-    cy.expect(holdingsRadio.has({ checked: true }));
+  isHoldingsRadioChecked(checked = true) {
+    cy.expect(holdingsRadio.has({ checked }));
+  },
+
+  verifyRadioHidden(name) {
+    cy.expect(RadioButton(name).absent());
   },
 
   uploadFile(fileName) {
@@ -494,14 +536,14 @@ export default {
   },
 
   verifyMatchedResults(...values) {
-    values.forEach(value => {
+    values.forEach((value) => {
       cy.expect(resultsAccordion.find(MultiColumnListCell({ content: value })).exists());
     });
-    cy.expect(resultsAccordion.has({ itemsAmount: (values.length).toString() }));
+    cy.expect(resultsAccordion.has({ itemsAmount: values.length.toString() }));
   },
 
   verifySpecificItemsMatched(...values) {
-    values.forEach(value => {
+    values.forEach((value) => {
       cy.expect(resultsAccordion.find(MultiColumnListCell({ content: including(value) })).exists());
     });
   },
@@ -522,20 +564,28 @@ export default {
   },
 
   verifyChangedResults(...values) {
-    values.forEach(value => {
+    values.forEach((value) => {
       cy.expect(changesAccordion.find(MultiColumnListCell({ content: value })).exists());
     });
-    cy.expect(bulkEditPane.find(HTML(`${values.length} records have been successfully changed`)).exists());
+    cy.expect(
+      bulkEditPane.find(HTML(`${values.length} records have been successfully changed`)).exists(),
+    );
   },
 
   verifyLocationChanges(rows, locationValue) {
     for (let i = 0; i < rows; i++) {
-      cy.expect(changesAccordion.find(MultiColumnListCell({ row: i, content: locationValue })).exists());
+      cy.expect(
+        changesAccordion.find(MultiColumnListCell({ row: i, content: locationValue })).exists(),
+      );
     }
   },
 
   verifyChangesUnderColumns(columnName, value) {
-    cy.expect(changesAccordion.find(MultiColumnListCell({ column: columnName, content: including(value) })).exists());
+    cy.expect(
+      changesAccordion
+        .find(MultiColumnListCell({ column: columnName, content: including(value) }))
+        .exists(),
+    );
   },
 
   verifyNonMatchedResults(...values) {
@@ -543,28 +593,47 @@ export default {
       errorsAccordion.find(MultiColumnListHeader('Record identifier')).exists(),
       errorsAccordion.find(MultiColumnListHeader('Reason for error')).exists(),
     ]);
-    values.forEach(value => {
+    values.forEach((value) => {
       cy.expect(errorsAccordion.find(MultiColumnListCell({ content: value })).exists());
     });
   },
 
   verifyErrorLabel(fileName, validRecordCount, invalidRecordCount) {
-    cy.expect(HTML(`${fileName}: ${validRecordCount + invalidRecordCount} entries * ${validRecordCount} records matched * ${invalidRecordCount} errors`).exists());
+    cy.expect(
+      HTML(
+        `${fileName}: ${
+          validRecordCount + invalidRecordCount
+        } entries * ${validRecordCount} records matched * ${invalidRecordCount} errors`,
+      ).exists(),
+    );
   },
 
   verifyErrorLabelAfterChanges(fileName, validRecordCount, invalidRecordCount) {
-    cy.expect(Accordion('Errors').find(HTML(`${fileName}: ${validRecordCount + invalidRecordCount} entries * ${validRecordCount} records changed * ${invalidRecordCount} errors`)).exists());
+    cy.expect(
+      Accordion('Errors')
+        .find(
+          HTML(
+            `${fileName}: ${
+              validRecordCount + invalidRecordCount
+            } entries * ${validRecordCount} records changed * ${invalidRecordCount} errors`,
+          ),
+        )
+        .exists(),
+    );
   },
 
   verifyReasonForError(errorText) {
-    cy.expect(Accordion('Errors').find(HTML(including(errorText))).exists());
+    cy.expect(
+      Accordion('Errors')
+        .find(HTML(including(errorText)))
+        .exists(),
+    );
   },
 
   verifyActionsAfterConductedCSVUploading(errors = true) {
     cy.do(actions.click());
     cy.expect([
       Button('Download matched records (CSV)').exists(),
-      startBulkEditLocalButton.exists(),
       DropdownMenu().find(HTML('Show columns')).exists(),
     ]);
     if (errors) {
@@ -582,15 +651,6 @@ export default {
     if (errors) {
       cy.expect(Button('Download errors (CSV)').exists());
     }
-  },
-
-  verifyActionsAfterChangingRecords() {
-    cy.do(actions.click());
-    cy.expect([
-      Button('Download matched records (CSV)').absent(),
-      Button('Start bulk edit').absent(),
-      DropdownMenu().find(HTML('Show columns')).exists(),
-    ]);
   },
 
   verifyUsersActionShowColumns() {
@@ -616,8 +676,6 @@ export default {
       DropdownMenu().find(Checkbox('Preferred contact type id')).has({ checked: false }),
       DropdownMenu().find(Checkbox('Date enrolled')).has({ checked: false }),
       DropdownMenu().find(Checkbox('Expiration date')).has({ checked: false }),
-      DropdownMenu().find(Checkbox('Record created')).has({ checked: false }),
-      DropdownMenu().find(Checkbox('Record updated')).has({ checked: false }),
       DropdownMenu().find(Checkbox('Tags')).has({ checked: false }),
       DropdownMenu().find(Checkbox('Custom fields')).has({ checked: false }),
     ]);
@@ -630,7 +688,7 @@ export default {
       DropdownMenu().find(Checkbox('Holdings HRID')).has({ checked: true }),
       DropdownMenu().find(Checkbox('Holdings type')).has({ checked: true }),
       DropdownMenu().find(Checkbox('Former ids')).has({ checked: false }),
-      DropdownMenu().find(Checkbox('Instance')).has({ checked: false }),
+      DropdownMenu().find(Checkbox('Instance (Title, Publisher, Publication date)')).has({ checked: false }),
       DropdownMenu().find(Checkbox('Permanent location')).has({ checked: true }),
       DropdownMenu().find(Checkbox('Temporary location')).has({ checked: true }),
       DropdownMenu().find(Checkbox('Effective location')).has({ checked: false }),
@@ -654,7 +712,7 @@ export default {
       DropdownMenu().find(Checkbox('Copy number')).has({ checked: false }),
       DropdownMenu().find(Checkbox('Number of items')).has({ checked: false }),
       DropdownMenu().find(Checkbox('Receiving history')).has({ checked: false }),
-      DropdownMenu().find(Checkbox('Suppressed from discovery')).has({ checked: false }),
+      DropdownMenu().find(Checkbox('Suppress from discovery')).has({ checked: false }),
       DropdownMenu().find(Checkbox('Statistical codes')).has({ checked: false }),
       DropdownMenu().find(Checkbox('Tags')).has({ checked: false }),
       DropdownMenu().find(Checkbox('Source')).has({ checked: false }),
@@ -663,62 +721,10 @@ export default {
     ]);
   },
 
-  verifyItemsActionDropdownItems() {
-    cy.expect([
-      DropdownMenu().find(Checkbox({ name: 'Item HRID', checked: true })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Barcode', checked: true })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Effective call number', checked: true })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Status', checked: true })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Material type', checked: true })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Permanent loan type', checked: true })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Temporary loan type', checked: true })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Item effective location', checked: true })).exists(),
-
-      DropdownMenu().find(Checkbox({ name: 'Item ID', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Version', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Holdings record ID', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Former identifiers', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Suppressed from discovery', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Title', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Contributor names', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Call number', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Shelving order', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Accession number', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Item level call number', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Item level call number prefix', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Item level call number suffix', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Item level call number type', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Volume', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Enumeration', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Chronology', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Year, caption', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Item identifier', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Copy number', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Number of pieces', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Description of pieces', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Number of missing pieces', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Missing pieces', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Missing pieces date', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Item damaged status', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Item damaged status date', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Administrative notes', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Notes', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Circulation Notes', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Is bound with', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Bound with titles', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Item permanent location', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Item temporary location', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'In transit destination service point', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Statistical codes', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Purchase order line identifier', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Tags', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Last check in', checked: false })).exists(),
-      DropdownMenu().find(Checkbox({ name: 'Electronic access', checked: false })).exists(),
-    ]);
-  },
-
   changeShowColumnCheckbox(...names) {
-    names.forEach(name => { cy.do(DropdownMenu().find(Checkbox(name)).click()); });
+    names.forEach((name) => {
+      cy.do(DropdownMenu().find(Checkbox(name)).click());
+    });
   },
 
   verifyResultColumTitles(title) {
@@ -751,11 +757,19 @@ export default {
   },
 
   clickActionsOnTheRow(row = 0) {
-    cy.do(MultiColumnListRow({ indexRow: `row-${row}` }).find(logsActionButton).click());
+    cy.do(
+      MultiColumnListRow({ indexRow: `row-${row}` })
+        .find(logsActionButton)
+        .click(),
+    );
   },
 
   clickActionsRunBy(runByUsername) {
-    cy.do(ListRow({ text: including(runByUsername) }).find(logsActionButton).click());
+    cy.do(
+      ListRow({ text: including(runByUsername) })
+        .find(logsActionButton)
+        .click(),
+    );
   },
 
   verifyTriggerLogsAction() {
@@ -763,10 +777,7 @@ export default {
   },
 
   verifyLogsRowAction() {
-    cy.expect([
-      triggerBtn.exists(),
-      errorsEncounteredBtn.exists()
-    ]);
+    cy.expect([triggerBtn.exists(), errorsEncounteredBtn.exists()]);
   },
 
   verifyLogsRowActionWhenCompleted() {
@@ -774,7 +785,7 @@ export default {
       triggerBtn.exists(),
       matchingRecordsBtn.exists(),
       previewPorposedChangesBtn.exists(),
-      updatedRecordBtn.exists()
+      updatedRecordBtn.exists(),
     ]);
   },
 
@@ -785,15 +796,12 @@ export default {
       errorsEncounteredBtn.exists(),
       previewPorposedChangesBtn.exists(),
       updatedRecordBtn.exists(),
-      errorsCommittingBtn.exists()
+      errorsCommittingBtn.exists(),
     ]);
   },
 
   verifyLogsRowActionWhenCompletedWithErrorsWithoutModification() {
-    cy.expect([
-      triggerBtn.exists(),
-      errorsEncounteredBtn.exists(),
-    ]);
+    cy.expect([triggerBtn.exists(), errorsEncounteredBtn.exists()]);
   },
 
   waitingFileDownload() {
@@ -874,11 +882,12 @@ export default {
   },
 
   isDragAndDropAreaDisabled(isDisabled) {
-    cy.expect((fileButton).has({ disabled: isDisabled }));
+    cy.expect(fileButton.has({ disabled: isDisabled }));
   },
 
   isBuildQueryButtonDisabled(isDisabled) {
-    cy.expect((buildQueryButton).has({ disabled: isDisabled }));
+    cy.expect(buildQueryButton.has({ disabled: isDisabled }));
+    cy.wait(2000);
   },
 
   clickBuildQueryButton() {
@@ -887,5 +896,5 @@ export default {
 
   verifyBuildQueryModal() {
     cy.expect(buildQueryModal.exists());
-  }
+  },
 };

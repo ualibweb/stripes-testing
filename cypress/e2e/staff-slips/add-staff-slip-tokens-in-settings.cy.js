@@ -1,4 +1,3 @@
-import uuid from 'uuid';
 import devTeams from '../../support/dictionary/devTeams';
 import permissions from '../../support/dictionary/permissions';
 import { getTestEntityValue } from '../../support/utils/stringTools';
@@ -28,7 +27,7 @@ describe('Staff slips', () => {
     name: getTestEntityValue('groupStaffSlips'),
   };
   const testData = {
-    userServicePoint: ServicePoints.getDefaultServicePointWithPickUpLocation('autotestTLR', uuid()),
+    userServicePoint: ServicePoints.getDefaultServicePointWithPickUpLocation(),
     itemBarcode: generateItemBarcode(),
   };
   const instanceData = {
@@ -85,13 +84,13 @@ describe('Staff slips', () => {
         });
         cy.createTempUser(
           [permissions.uiCirculationCreateEditRemoveStaffSlips.gui, permissions.requestsAll.gui],
-          patronGroup.name
+          patronGroup.name,
         ).then((userProperties) => {
           userData = userProperties;
           UserEdit.addServicePointViaApi(
             testData.userServicePoint.id,
             userData.userId,
-            testData.userServicePoint.id
+            testData.userServicePoint.id,
           );
         });
       })
@@ -126,12 +125,12 @@ describe('Staff slips', () => {
       testData.defaultLocation.institutionId,
       testData.defaultLocation.campusId,
       testData.defaultLocation.libraryId,
-      testData.defaultLocation.id
+      testData.defaultLocation.id,
     );
   });
 
   it(
-    'C375293 Add "requester.patronGroup" as staff slip token in Settings',
+    'C375293 Add "requester.patronGroup" as staff slip token in Settings (volaris)',
     { tags: [TestTypes.criticalPath, devTeams.volaris] },
     () => {
       cy.visit(SettingsMenu.circulationStaffSlipsPath);
@@ -141,11 +140,11 @@ describe('Staff slips', () => {
       EditStaffClips.checkAfterUpdate('Transit');
       EditStaffClips.checkPreview('Transit', 'Undergraduate');
       EditStaffClips.editAndClearTransit();
-    }
+    },
   );
 
   it(
-    'C387442 Add "Departments" as staff slip token in Settings',
+    'C387442 Add "Departments" as staff slip token in Settings (volaris)',
     { tags: [TestTypes.criticalPath, devTeams.volaris] },
     () => {
       cy.visit(SettingsMenu.circulationStaffSlipsPath);
@@ -155,11 +154,11 @@ describe('Staff slips', () => {
       EditStaffClips.checkAfterUpdate('Transit');
       EditStaffClips.checkPreview('Transit', 'Library Technical Services; IT Operations');
       EditStaffClips.editAndClearTransit();
-    }
+    },
   );
 
   it(
-    'C388508 Verify that token "currentDateTime" is populated in the pick slip',
+    'C388508 Verify that token "currentDateTime" is populated in the pick slip (volaris)',
     { tags: [TestTypes.criticalPath, devTeams.volaris] },
     () => {
       cy.visit(SettingsMenu.circulationStaffSlipsPath);
@@ -168,10 +167,11 @@ describe('Staff slips', () => {
       EditStaffClips.saveAndClose();
       EditStaffClips.checkAfterUpdate('Pick slip');
       cy.visit(TopMenu.requestsPath);
+      cy.wait(5000);
       NewRequest.printPickSlips();
       cy.visit(SettingsMenu.circulationStaffSlipsPath);
       EditStaffClips.editPickslip();
       EditStaffClips.clearStaffClips();
-    }
+    },
   );
 });
